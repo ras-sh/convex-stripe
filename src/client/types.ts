@@ -1,19 +1,52 @@
-import type { Infer } from "convex/values";
-import type { vTodo } from "../validators/index.js";
+import type Stripe from "stripe";
+import type { RunActionCtx, RunQueryCtx } from "../shared.js";
 
-export type ComponentOptions = {
-  enabled?: boolean;
-  maxItems?: number;
+/**
+ * Configuration for a single product
+ */
+export type ProductConfig = {
+  productId: string;
+  priceId?: string;
 };
 
-// Infer types from validators to avoid duplication
-export type Todo = Infer<typeof vTodo>;
-
-export type CreateTodoData = {
-  text: string;
+/**
+ * Configuration for the Stripe component
+ */
+export type StripeConfig<Products extends Record<string, ProductConfig>> = {
+  getUserInfo: (ctx: RunQueryCtx) => Promise<{ userId: string; email: string }>;
+  products?: Products;
+  apiKey: string;
+  webhookSecret: string;
+  mode?: "test" | "live";
 };
 
-export type UpdateTodoData = {
-  id: string;
-  text: string;
+/**
+ * Configuration for webhook handling
+ */
+export type WebhookConfig = {
+  path?: string;
+  onCheckoutComplete?: (
+    ctx: RunActionCtx,
+    event: Stripe.CheckoutSessionCompletedEvent
+  ) => Promise<void>;
+  onSubscriptionCreated?: (
+    ctx: RunActionCtx,
+    event: Stripe.CustomerSubscriptionCreatedEvent
+  ) => Promise<void>;
+  onSubscriptionUpdated?: (
+    ctx: RunActionCtx,
+    event: Stripe.CustomerSubscriptionUpdatedEvent
+  ) => Promise<void>;
+  onSubscriptionDeleted?: (
+    ctx: RunActionCtx,
+    event: Stripe.CustomerSubscriptionDeletedEvent
+  ) => Promise<void>;
+  onInvoicePaid?: (
+    ctx: RunActionCtx,
+    event: Stripe.InvoicePaidEvent
+  ) => Promise<void>;
+  onInvoiceFailed?: (
+    ctx: RunActionCtx,
+    event: Stripe.InvoicePaymentFailedEvent
+  ) => Promise<void>;
 };

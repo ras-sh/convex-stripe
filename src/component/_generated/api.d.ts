@@ -29,56 +29,43 @@ declare const fullApi: ApiFromModules<{
 }>;
 export type Mounts = {
   lib: {
-    create: FunctionReference<
-      "mutation",
-      "public",
-      { text: string },
-      string
-    >;
-    createWithValidation: FunctionReference<
-      "action",
-      "public",
-      { text: string },
-      { id: string; isValid: boolean; message: string }
-    >;
-    get: FunctionReference<
-      "query",
-      "public",
-      { id: string },
-      {
-        _creationTime: number;
-        _id: string;
-        isCompleted: boolean;
-        text: string;
-      } | null
-    >;
-    list: FunctionReference<
-      "query",
-      "public",
-      { completedOnly?: boolean },
-      Array<{
-        _creationTime: number;
-        _id: string;
-        isCompleted: boolean;
-        text: string;
-      }>
-    >;
-    remove: FunctionReference<"mutation", "public", { id: string }, null>;
-    toggle: FunctionReference<"mutation", "public", { id: string }, null>;
-    update: FunctionReference<
-      "mutation",
-      "public",
-      { id: string; text: string },
-      null
-    >;
+    // Queries
+    getCustomerByUserId: FunctionReference<"query", "internal", { userId: string }, any>;
+    getCustomerByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
+    listActiveProducts: FunctionReference<"query", "internal", Record<string, never>, any>;
+    getProductBySlug: FunctionReference<"query", "internal", { slug: string }, any>;
+    getProductByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
+    getPricesForProduct: FunctionReference<"query", "internal", { productId: string }, any>;
+    getPriceBySlug: FunctionReference<"query", "internal", { slug: string }, any>;
+    getPriceByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
+    getCurrentSubscription: FunctionReference<"query", "internal", { userId: string }, any>;
+    listUserSubscriptions: FunctionReference<"query", "internal", { userId: string }, any>;
+    getSubscriptionByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
+    listUserInvoices: FunctionReference<"query", "internal", { userId: string; limit?: number }, any>;
+    listUserPaymentMethods: FunctionReference<"query", "internal", { userId: string }, any>;
+
+    // Mutations
+    upsertCustomer: FunctionReference<"mutation", "internal", any, string>;
+    upsertProduct: FunctionReference<"mutation", "internal", any, string>;
+    upsertPrice: FunctionReference<"mutation", "internal", any, string>;
+    upsertSubscription: FunctionReference<"mutation", "internal", any, string>;
+    deleteSubscription: FunctionReference<"mutation", "internal", { stripeId: string }, void>;
+    upsertInvoice: FunctionReference<"mutation", "internal", any, string>;
+    upsertPaymentMethod: FunctionReference<"mutation", "internal", any, string>;
+    deletePaymentMethod: FunctionReference<"mutation", "internal", { stripeId: string }, void>;
   };
 };
+// For now fullApiWithMounts is only fullApi which provides
+// jump-to-definition in component client code.
+// Use Mounts for the same type without the inference.
+declare const fullApiWithMounts: typeof fullApi;
+
 export declare const api: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
-  typeof fullApi,
+  typeof fullApiWithMounts,
   FunctionReference<any, "internal">
 >;
 

@@ -1,21 +1,25 @@
 {
-  "name": "@ras-sh/template-convex-component",
-  "version": "0.0.1",
+  "name": "@ras-sh/convex-stripe",
+  "version": "0.1.0",
   "type": "module",
-  "description": "Template for creating Convex components",
+  "description": "Unofficial Convex component for Stripe integration with subscription management, webhooks, and billing portal",
   "keywords": [
     "convex",
     "component",
-    "template"
+    "stripe",
+    "subscriptions",
+    "payments",
+    "billing",
+    "saas"
   ],
-  "homepage": "https://github.com/ras-sh/template-convex-component#readme",
+  "homepage": "https://github.com/ras-sh/convex-stripe#readme",
   "bugs": {
-    "url": "https://github.com/ras-sh/template-convex-component/issues",
+    "url": "https://github.com/ras-sh/convex-stripe/issues",
     "email": "hi@ras.sh"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ras-sh/template-convex-component"
+    "url": "https://github.com/ras-sh/convex-stripe"
   },
   "license": "MIT",
   "author": {
@@ -71,15 +75,16 @@
     "changeset:version": "changeset version",
     "changeset:publish": "npm run clean && npm ci && npm run test && npm run check && npm run check-types && changeset publish"
   },
-  "peerDependencies": {
-    "convex": "^1.0.0",
-    "convex-helpers": "^0.1.0"
+  "dependencies": {
+    "stripe": "^19.1.0",
+    "svix": "^1.81.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.2",
     "@changesets/cli": "^2.29.7",
     "@ras-sh/typescript-config": "^0.0.3",
     "@types/node": "^24.9.2",
+    "@types/react": "^19.2.2",
     "@vitest/coverage-v8": "^4.0.5",
     "chokidar-cli": "^3.0.0",
     "convex": "^1.28.0",
@@ -87,8 +92,19 @@
     "convex-test": "^0.0.38",
     "cpy-cli": "^6.0.0",
     "lefthook": "^2.0.2",
+    "react": "^19.2.0",
     "typescript": "^5.9.3",
     "ultracite": "6.0.5",
     "vitest": "^4.0.5"
+  },
+  "peerDependencies": {
+    "convex": "^1.0.0",
+    "convex-helpers": "^0.1.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   }
 }

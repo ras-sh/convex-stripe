@@ -3,8 +3,19 @@
   "extends": ["ultracite/core"],
   "linter": {
     "rules": {
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
+      },
+      "nursery": {
+        "useMaxParams": "off"
+      },
+      "suspicious": {
+        "noConsole": "off",
+        "useAwait": "off"
+      },
       "style": {
-        "noMagicNumbers": "off"
+        "noMagicNumbers": "off",
+        "useFilenamingConvention": "off"
       }
     }
   }

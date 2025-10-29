@@ -6,7 +6,10 @@
     "incremental": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["node"]
+    "types": ["node"],
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["./src/**/*"]
 }

@@ -1,5 +1,5 @@
 import { defineComponent } from "convex/server";
 
-const component = defineComponent("component");
+const component = defineComponent("stripe");
 
 export default component;
