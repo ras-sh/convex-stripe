@@ -1,8 +1,13 @@
 import { actionGeneric, type HttpRouter, queryGeneric } from "convex/server";
-import { v } from "convex/values";
 import Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
 import type { UseApi } from "../shared.js";
+import {
+  vCancelSubscriptionArgs,
+  vGenerateBillingPortalLinkArgs,
+  vGenerateCheckoutLinkArgs,
+  vListUserInvoicesArgs,
+} from "../validators.js";
 import { CustomerMethods } from "./customers.js";
 import { InvoiceMethods } from "./invoices.js";
 import { PaymentMethodMethods } from "./paymentMethods.js";
@@ -221,7 +226,7 @@ export class StripeComponent<
       }),
 
       listUserInvoices: queryGeneric({
-        args: { limit: v.optional(v.number()) },
+        args: vListUserInvoicesArgs.fields,
         handler: async (ctx, args) => {
           const { userId } = await this.config.getUserInfo(ctx);
           return await this.listUserInvoices(ctx, {
@@ -241,26 +246,19 @@ export class StripeComponent<
 
       // Actions
       generateCheckoutLink: actionGeneric({
-        args: {
-          priceIds: v.array(v.string()),
-          successUrl: v.string(),
-          cancelUrl: v.string(),
-          mode: v.optional(
-            v.union(v.literal("subscription"), v.literal("payment"))
-          ),
-        },
+        args: vGenerateCheckoutLinkArgs.fields,
         handler: async (ctx, args) =>
           await this.generateCheckoutLink(ctx, args),
       }),
 
       generateBillingPortalLink: actionGeneric({
-        args: { returnUrl: v.string() },
+        args: vGenerateBillingPortalLinkArgs.fields,
         handler: async (ctx, args) =>
           await this.generateBillingPortalLink(ctx, args),
       }),
 
       cancelSubscription: actionGeneric({
-        args: { immediate: v.optional(v.boolean()) },
+        args: vCancelSubscriptionArgs.fields,
         handler: async (ctx, args) =>
           await this.cancelSubscription(ctx, {
             immediate: args.immediate,

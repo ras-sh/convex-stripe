@@ -1,6 +1,7 @@
 import type Stripe from "stripe";
 import { type api, internal } from "../component/_generated/api.js";
 import type { RunActionCtx, RunQueryCtx, UseApi } from "../shared.js";
+import type { StripeCustomer } from "../validators.js";
 
 /**
  * Customer-related methods for the Stripe component
@@ -17,8 +18,13 @@ export class CustomerMethods {
   /**
    * Get a customer by user ID
    */
-  getCustomerByUserId(ctx: RunQueryCtx, { userId }: { userId: string }) {
-    return ctx.runQuery(this.component.lib.getCustomerByUserId, { userId });
+  async getCustomerByUserId(
+    ctx: RunQueryCtx,
+    { userId }: { userId: string }
+  ): Promise<StripeCustomer | null> {
+    return (await ctx.runQuery(this.component.lib.getCustomerByUserId, {
+      userId,
+    })) as StripeCustomer | null;
   }
 
   /**
@@ -27,7 +33,7 @@ export class CustomerMethods {
   async createCustomer(
     ctx: RunActionCtx,
     { userId, email, name }: { userId: string; email: string; name?: string }
-  ) {
+  ): Promise<StripeCustomer> {
     // Check if customer already exists
     const existing = await this.getCustomerByUserId(ctx, { userId });
     if (existing) {

@@ -1,4 +1,17 @@
 import { v } from "convex/values";
+import {
+  vDeletePaymentMethodArgs,
+  vDeleteSubscriptionArgs,
+  vListUserInvoicesArgs,
+  vStripeId,
+  vUpsertCustomerArgs,
+  vUpsertInvoiceArgs,
+  vUpsertPaymentMethodArgs,
+  vUpsertPriceArgs,
+  vUpsertProductArgs,
+  vUpsertSubscriptionArgs,
+  vUserId,
+} from "../validators.js";
 import { internalMutation, internalQuery, query } from "./_generated/server.js";
 
 // ===== QUERIES =====
@@ -7,7 +20,7 @@ import { internalMutation, internalQuery, query } from "./_generated/server.js";
  * Get a customer by user ID
  */
 export const getCustomerByUserId = query({
-  args: { userId: v.string() },
+  args: { userId: vUserId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("customers")
@@ -19,7 +32,7 @@ export const getCustomerByUserId = query({
  * Get a customer by Stripe ID
  */
 export const getCustomerByStripeId = internalQuery({
-  args: { stripeId: v.string() },
+  args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("customers")
@@ -55,7 +68,7 @@ export const getProductBySlug = query({
  * Get a product by Stripe ID
  */
 export const getProductByStripeId = internalQuery({
-  args: { stripeId: v.string() },
+  args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("products")
@@ -91,7 +104,7 @@ export const getPriceBySlug = query({
  * Get a price by Stripe ID
  */
 export const getPriceByStripeId = internalQuery({
-  args: { stripeId: v.string() },
+  args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("prices")
@@ -103,7 +116,7 @@ export const getPriceByStripeId = internalQuery({
  * Get the current active subscription for a user
  */
 export const getCurrentSubscription = query({
-  args: { userId: v.string() },
+  args: { userId: vUserId },
   handler: async (ctx, args) => {
     const subscriptions = await ctx.db
       .query("subscriptions")
@@ -121,7 +134,7 @@ export const getCurrentSubscription = query({
  * List all subscriptions for a user
  */
 export const listUserSubscriptions = query({
-  args: { userId: v.string() },
+  args: { userId: vUserId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("subscriptions")
@@ -133,7 +146,7 @@ export const listUserSubscriptions = query({
  * Get a subscription by Stripe ID
  */
 export const getSubscriptionByStripeId = internalQuery({
-  args: { stripeId: v.string() },
+  args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("subscriptions")
@@ -146,8 +159,8 @@ export const getSubscriptionByStripeId = internalQuery({
  */
 export const listUserInvoices = query({
   args: {
-    userId: v.string(),
-    limit: v.optional(v.number()),
+    userId: vUserId,
+    ...vListUserInvoicesArgs.fields,
   },
   handler: async (ctx, args) => {
     const transaction = ctx.db
@@ -167,7 +180,7 @@ export const listUserInvoices = query({
  * Get payment methods for a user
  */
 export const listUserPaymentMethods = query({
-  args: { userId: v.string() },
+  args: { userId: vUserId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("paymentMethods")
@@ -181,15 +194,7 @@ export const listUserPaymentMethods = query({
  * Create or update a customer
  */
 export const upsertCustomer = internalMutation({
-  args: {
-    stripeId: v.string(),
-    userId: v.string(),
-    email: v.string(),
-    name: v.optional(v.string()),
-    currency: v.optional(v.string()),
-    created: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertCustomerArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("customers")
@@ -214,17 +219,7 @@ export const upsertCustomer = internalMutation({
  * Create or update a product
  */
 export const upsertProduct = internalMutation({
-  args: {
-    stripeId: v.string(),
-    name: v.string(),
-    description: v.optional(v.string()),
-    active: v.boolean(),
-    type: v.optional(v.string()),
-    slug: v.optional(v.string()),
-    created: v.number(),
-    updated: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertProductArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("products")
@@ -252,21 +247,7 @@ export const upsertProduct = internalMutation({
  * Create or update a price
  */
 export const upsertPrice = internalMutation({
-  args: {
-    stripeId: v.string(),
-    productId: v.id("products"),
-    productStripeId: v.string(),
-    active: v.boolean(),
-    currency: v.string(),
-    unitAmount: v.optional(v.number()),
-    billingScheme: v.optional(v.string()),
-    type: v.string(),
-    recurringInterval: v.optional(v.string()),
-    recurringIntervalCount: v.optional(v.number()),
-    slug: v.optional(v.string()),
-    created: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertPriceArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("prices")
@@ -298,26 +279,7 @@ export const upsertPrice = internalMutation({
  * Create or update a subscription
  */
 export const upsertSubscription = internalMutation({
-  args: {
-    stripeId: v.string(),
-    customerId: v.id("customers"),
-    customerStripeId: v.string(),
-    userId: v.string(),
-    status: v.string(),
-    priceId: v.optional(v.id("prices")),
-    priceStripeId: v.optional(v.string()),
-    productSlug: v.optional(v.string()),
-    currency: v.string(),
-    currentPeriodStart: v.number(),
-    currentPeriodEnd: v.number(),
-    cancelAtPeriodEnd: v.boolean(),
-    canceledAt: v.optional(v.number()),
-    endedAt: v.optional(v.number()),
-    trialStart: v.optional(v.number()),
-    trialEnd: v.optional(v.number()),
-    created: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertSubscriptionArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("subscriptions")
@@ -351,7 +313,7 @@ export const upsertSubscription = internalMutation({
  * Delete a subscription
  */
 export const deleteSubscription = internalMutation({
-  args: { stripeId: v.string() },
+  args: vDeleteSubscriptionArgs.fields,
   handler: async (ctx, args) => {
     const subscription = await ctx.db
       .query("subscriptions")
@@ -368,31 +330,7 @@ export const deleteSubscription = internalMutation({
  * Create or update an invoice
  */
 export const upsertInvoice = internalMutation({
-  args: {
-    stripeId: v.string(),
-    customerId: v.id("customers"),
-    customerStripeId: v.string(),
-    userId: v.string(),
-    subscriptionId: v.optional(v.id("subscriptions")),
-    subscriptionStripeId: v.optional(v.string()),
-    status: v.string(),
-    currency: v.string(),
-    amountDue: v.number(),
-    amountPaid: v.number(),
-    amountRemaining: v.number(),
-    subtotal: v.number(),
-    total: v.number(),
-    tax: v.optional(v.number()),
-    invoicePdf: v.optional(v.string()),
-    hostedInvoiceUrl: v.optional(v.string()),
-    billingReason: v.optional(v.string()),
-    periodStart: v.number(),
-    periodEnd: v.number(),
-    dueDate: v.optional(v.number()),
-    paidAt: v.optional(v.number()),
-    created: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertInvoiceArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("invoices")
@@ -420,24 +358,7 @@ export const upsertInvoice = internalMutation({
  * Create or update a payment method
  */
 export const upsertPaymentMethod = internalMutation({
-  args: {
-    stripeId: v.string(),
-    customerId: v.id("customers"),
-    customerStripeId: v.string(),
-    userId: v.string(),
-    type: v.string(),
-    card: v.optional(
-      v.object({
-        brand: v.string(),
-        last4: v.string(),
-        expMonth: v.number(),
-        expYear: v.number(),
-      })
-    ),
-    isDefault: v.boolean(),
-    created: v.number(),
-    metadata: v.optional(v.record(v.string(), v.string())),
-  },
+  args: vUpsertPaymentMethodArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("paymentMethods")
@@ -461,7 +382,7 @@ export const upsertPaymentMethod = internalMutation({
  * Delete a payment method
  */
 export const deletePaymentMethod = internalMutation({
-  args: { stripeId: v.string() },
+  args: vDeletePaymentMethodArgs.fields,
   handler: async (ctx, args) => {
     const paymentMethod = await ctx.db
       .query("paymentMethods")

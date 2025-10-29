@@ -1,18 +1,10 @@
 import type Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
 import type { RunActionCtx, RunQueryCtx, UseApi } from "../shared.js";
+import type { StripeCustomer } from "../validators.js";
 import type { ProductConfig, StripeConfig } from "./types.js";
 
-type Customer = {
-  _id: string;
-  stripeId: string;
-  userId: string;
-  email: string;
-  name?: string;
-  currency?: string;
-  created: number;
-  metadata?: Record<string, string>;
-};
+type Customer = StripeCustomer;
 
 /**
  * Subscription-related methods for the Stripe component
