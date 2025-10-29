@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  repository_dispatch:
+    types: [release]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # TODO: Uncomment this for your own repository
+      # - name: Run Changesets (version or publish)
+      #   id: changesets
+      #   uses: changesets/action@v1
+      #   with:
+      #     version: pnpm run changeset:version
+      #     publish: pnpm run changeset:publish
+      #     commit: "ci: version packages"
+      #     title: "ci: version packages"
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # - name: Auto-merge Changesets PR
+      #   if: steps.changesets.outputs.hasChangesets == 'true'
+      #   run: |
+      #     gh pr merge --squash "$PR_NUMBER"
+      #     gh api --method POST /repos/$REPO/dispatches -f 'event_type=release'
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     REPO: ${{ github.repository }}
+      #     PR_NUMBER: ${{ steps.changesets.outputs.pullRequestNumber }}

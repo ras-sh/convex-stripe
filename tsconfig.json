@@ -1,0 +1,12 @@
+{
+  "extends": "@ras-sh/typescript-config/base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "composite": true,
+    "incremental": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "types": ["node"]
+  },
+  "include": ["./src/**/*"]
+}

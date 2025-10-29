@@ -1,0 +1,94 @@
+{
+  "name": "@ras-sh/template-convex-component",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Template for creating Convex components",
+  "keywords": [
+    "convex",
+    "component",
+    "template"
+  ],
+  "homepage": "https://github.com/ras-sh/template-convex-component#readme",
+  "bugs": {
+    "url": "https://github.com/ras-sh/template-convex-component/issues",
+    "email": "hi@ras.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ras-sh/template-convex-component"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Richard Solomou",
+    "email": "hi@ras.sh",
+    "url": "https://ras.sh"
+  },
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "@convex-dev/component-source": "./src/client/index.ts",
+      "types": "./dist/client/index.d.ts",
+      "default": "./dist/client/index.js"
+    },
+    "./convex.config": {
+      "@convex-dev/component-source": "./src/component/convex.config.ts",
+      "types": "./dist/component/convex.config.d.ts",
+      "default": "./dist/component/convex.config.js"
+    },
+    "./react": {
+      "@convex-dev/component-source": "./src/react/index.ts",
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./validators": {
+      "@convex-dev/component-source": "./src/validators/index.ts",
+      "types": "./dist/validators/index.d.ts",
+      "default": "./dist/validators/index.js"
+    },
+    "./test": "./src/test.ts"
+  },
+  "main": "./dist/client/index.js",
+  "module": "./dist/client/index.js",
+  "types": "./dist/client/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc --project ./tsconfig.build.json && npm run copy:dts",
+    "copy:dts": "rsync -a --include='*/' --include='*.d.ts' --exclude='*' src/ dist/ || cpy 'src/**/*.d.ts' 'dist/' --parents",
+    "build:watch": "npx chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'npm run build' --initial",
+    "dev:backend": "convex dev --live-component-sources --typecheck-components",
+    "clean": "rm -rf dist *.tsbuildinfo node_modules/.cache",
+    "test": "vitest run --typecheck",
+    "test:watch": "vitest --typecheck --clearScreen false",
+    "test:coverage": "vitest run --typecheck --coverage",
+    "check-types": "tsc --noEmit",
+    "check": "ultracite check",
+    "fix": "ultracite fix --unsafe",
+    "prepare": "npm run build",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "npm run clean && npm ci && npm run test && npm run check && npm run check-types && changeset publish"
+  },
+  "peerDependencies": {
+    "convex": "^1.0.0",
+    "convex-helpers": "^0.1.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.2",
+    "@changesets/cli": "^2.29.7",
+    "@ras-sh/typescript-config": "^0.0.3",
+    "@types/node": "^24.9.2",
+    "@vitest/coverage-v8": "^4.0.5",
+    "chokidar-cli": "^3.0.0",
+    "convex": "^1.28.0",
+    "convex-helpers": "^0.1.104",
+    "convex-test": "^0.0.38",
+    "cpy-cli": "^6.0.0",
+    "lefthook": "^2.0.2",
+    "typescript": "^5.9.3",
+    "ultracite": "6.0.5",
+    "vitest": "^4.0.5"
+  }
+}
