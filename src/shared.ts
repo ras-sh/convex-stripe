@@ -4,20 +4,7 @@ import type {
   FunctionReference,
   FunctionReturnType,
 } from "convex/server";
-import { type GenericId, type Infer, type Value, v } from "convex/values";
-
-export const vSharedConfig = v.object({
-  enabled: v.boolean(),
-  maxItems: v.optional(v.number()),
-});
-
-export type SharedConfig = Infer<typeof vSharedConfig>;
-
-export const DEFAULT_MAX_ITEMS = 100;
-
-export function validateName(name: string): boolean {
-  return name.length > 0 && name.length <= 255;
-}
+import type { GenericId, Value } from "convex/values";
 
 export type RunQueryCtx = {
   runQuery: <Query extends FunctionReference<"query", "internal">>(

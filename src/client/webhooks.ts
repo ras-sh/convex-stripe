@@ -147,15 +147,16 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        // Unhandled event type
+        break;
     }
   }
 
   private async handleCheckoutComplete(
     _ctx: RunActionCtx,
-    event: Stripe.CheckoutSessionCompletedEvent
+    _event: Stripe.CheckoutSessionCompletedEvent
   ) {
-    console.log("Checkout completed:", event.data.object.id);
+    // Checkout completed
   }
 
   private async handleSubscriptionUpdate(

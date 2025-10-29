@@ -45,11 +45,10 @@
       "default": "./dist/react/index.js"
     },
     "./validators": {
-      "@convex-dev/component-source": "./src/validators/index.ts",
-      "types": "./dist/validators/index.d.ts",
-      "default": "./dist/validators/index.js"
-    },
-    "./test": "./src/test.ts"
+      "@convex-dev/component-source": "./src/validators.ts",
+      "types": "./dist/validators.d.ts",
+      "default": "./dist/validators.js"
+    }
   },
   "main": "./dist/client/index.js",
   "module": "./dist/client/index.js",

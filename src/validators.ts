@@ -1,25 +1,15 @@
-import { type Infer, v } from "convex/values";
-import { doc, typedV } from "convex-helpers/validators";
+import { v } from "convex/values";
+import { typedV } from "convex-helpers/validators";
 import type { Doc } from "./component/_generated/dataModel.js";
 import schema from "./component/schema.js";
 
 const vv = typedV(schema);
 
-// Document validators
-export const vStripeCustomer = doc(schema, "customers");
-export const vStripeProduct = vv.doc("products");
-export const vStripePrice = vv.doc("prices");
-export const vStripeSubscription = vv.doc("subscriptions");
-export const vStripeInvoice = vv.doc("invoices");
-export const vStripePaymentMethod = vv.doc("paymentMethods");
-
 // ID validators
-export const vStripeCustomerId = vv.id("customers");
-export const vStripeProductId = vv.id("products");
-export const vStripePriceId = vv.id("prices");
-export const vStripeSubscriptionId = vv.id("subscriptions");
-export const vStripeInvoiceId = vv.id("invoices");
-export const vStripePaymentMethodId = vv.id("paymentMethods");
+const vStripeCustomerId = vv.id("customers");
+const vStripeProductId = vv.id("products");
+const vStripePriceId = vv.id("prices");
+const vStripeSubscriptionId = vv.id("subscriptions");
 
 // Common field validators
 export const vUserId = v.string();
@@ -27,7 +17,7 @@ export const vStripeId = v.string();
 export const vMetadata = v.optional(v.record(v.string(), v.string()));
 
 // Nested object validators
-export const vCard = v.object({
+const vCard = v.object({
   brand: v.string(),
   last4: v.string(),
   expMonth: v.number(),
@@ -162,15 +152,3 @@ export const vCancelSubscriptionArgs = v.object({
 
 // Type exports - use Doc types from dataModel for proper Id types
 export type StripeCustomer = Doc<"customers">;
-export type StripeProduct = Doc<"products">;
-export type StripePrice = Doc<"prices">;
-export type StripeSubscription = Doc<"subscriptions">;
-export type StripeInvoice = Doc<"invoices">;
-export type StripePaymentMethod = Doc<"paymentMethods">;
-
-export type UpsertCustomerArgs = Infer<typeof vUpsertCustomerArgs>;
-export type UpsertProductArgs = Infer<typeof vUpsertProductArgs>;
-export type UpsertPriceArgs = Infer<typeof vUpsertPriceArgs>;
-export type UpsertSubscriptionArgs = Infer<typeof vUpsertSubscriptionArgs>;
-export type UpsertInvoiceArgs = Infer<typeof vUpsertInvoiceArgs>;
-export type UpsertPaymentMethodArgs = Infer<typeof vUpsertPaymentMethodArgs>;
