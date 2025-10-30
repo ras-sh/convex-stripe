@@ -58,9 +58,9 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --project ./tsconfig.build.json && npm run copy:dts",
+    "build": "tsc --project ./tsconfig.build.json && pnpm copy:dts",
     "copy:dts": "rsync -a --include='*/' --include='*.d.ts' --exclude='*' src/ dist/ || cpy 'src/**/*.d.ts' 'dist/' --parents",
-    "build:watch": "npx chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'npm run build' --initial",
+    "build:watch": "npx chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'pnpm build' --initial",
     "dev:backend": "convex dev --live-component-sources --typecheck-components",
     "clean": "rm -rf dist *.tsbuildinfo node_modules/.cache",
     "test": "vitest run --typecheck",
@@ -69,10 +69,10 @@
     "check-types": "tsc --noEmit",
     "check": "ultracite check",
     "fix": "ultracite fix --unsafe",
-    "prepare": "npm run build",
+    "prepare": "pnpm build",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "npm run clean && npm ci && npm run test && npm run check && npm run check-types && changeset publish"
+    "changeset:publish": "pnpm test && pnpm check && pnpm check-types && changeset publish"
   },
   "dependencies": {
     "svix": "^1.81.0"
