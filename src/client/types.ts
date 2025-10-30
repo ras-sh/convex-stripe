@@ -15,9 +15,8 @@ export type ProductConfig = {
 export type StripeConfig<Products extends Record<string, ProductConfig>> = {
   getUserInfo: (ctx: RunQueryCtx) => Promise<{ userId: string; email: string }>;
   products?: Products;
-  apiKey: string;
+  stripe: Stripe;
   webhookSecret: string;
-  mode?: "test" | "live";
 };
 
 /**

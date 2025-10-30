@@ -8,9 +8,6 @@ importers:
 
   .:
     dependencies:
-      stripe:
-        specifier: ^19.1.0
-        version: 19.1.0(@types/node@24.9.2)
       svix:
         specifier: ^1.81.0
         version: 1.81.0
@@ -54,6 +51,9 @@ importers:
       react:
         specifier: ^19.2.0
         version: 19.2.0
+      stripe:
+        specifier: ^19.2.0
+        version: 19.2.0(@types/node@24.9.2)
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -794,8 +794,8 @@ packages:
     resolution: {integrity: sha512-aUTnJc/JipRzJrNADXVvpVqi6CO0dn3nx4EVPxijri+fj3LUUDyZQOgVeW54Ob3Y1Xh9Iz8f+CgaCl8v0mn9bA==}
     engines: {node: '>=18'}
 
-  chardet@2.1.0:
-    resolution: {integrity: sha512-bNFETTG/pM5ryzQ9Ad0lJOTa6HWD/YsScAR3EnCPZRPlQh77JocYktSHOUHelyhm8IARL+o4c4F1bP5KVOjiRA==}
+  chardet@2.1.1:
+    resolution: {integrity: sha512-PsezH1rqdV9VvyNhxxOW32/d75r01NY7TQCmOqomRo15ZSOKbpTFVsfjghxo6JloQUCGnH4k1LGu0R4yCLlWQQ==}
 
   chokidar-cli@3.0.0:
     resolution: {integrity: sha512-xVW+Qeh7z15uZRxHOkP93Ux8A0xbPzwK4GaqD8dQOYc34TlkqUhVSS59fK36DOp5WdJlrRzlYSy02Ht99FjZqQ==}
@@ -1579,8 +1579,8 @@ packages:
     resolution: {integrity: sha512-vavAMRXOgBVNF6nyEEmL3DBK19iRpDcoIwW+swQ+CbGiu7lju6t+JklA1MHweoWtadgt4ISVUsXLyDq34ddcwA==}
     engines: {node: '>=4'}
 
-  stripe@19.1.0:
-    resolution: {integrity: sha512-FjgIiE98dMMTNssfdjMvFdD4eZyEzdWAOwPYqzhPRNZeg9ggFWlPXmX1iJKD5pPIwZBaPlC3SayQQkwsPo6/YQ==}
+  stripe@19.2.0:
+    resolution: {integrity: sha512-strzN8luMGMC1LEleGKg7pJGXFx0kSS4y/uSjK8yPQV9SUBMtJVAp/v8XMQLRnMbXaSaWLrIaHcMlKcsizdRDQ==}
     engines: {node: '>=16'}
     peerDependencies:
       '@types/node': '>=16'
@@ -2141,7 +2141,7 @@ snapshots:
 
   '@inquirer/external-editor@1.0.2(@types/node@24.9.2)':
     dependencies:
-      chardet: 2.1.0
+      chardet: 2.1.1
       iconv-lite: 0.7.0
     optionalDependencies:
       '@types/node': 24.9.2
@@ -2389,7 +2389,7 @@ snapshots:
 
   chai@6.2.0: {}
 
-  chardet@2.1.0: {}
+  chardet@2.1.1: {}
 
   chokidar-cli@3.0.0:
     dependencies:
@@ -3134,7 +3134,7 @@ snapshots:
 
   strip-bom@3.0.0: {}
 
-  stripe@19.1.0(@types/node@24.9.2):
+  stripe@19.2.0(@types/node@24.9.2):
     dependencies:
       qs: 6.14.0
     optionalDependencies:

@@ -17,6 +17,8 @@ Convex component for Stripe integration with subscription management, webhooks, 
 npm install @ras-sh/convex-stripe stripe
 ```
 
+This component requires `stripe` as a peer dependency, giving you control over the Stripe version and allowing you to use the Stripe SDK directly for advanced operations.
+
 ## Quick Start
 
 ### 1. Configure the component
@@ -40,6 +42,11 @@ In `convex/stripe.ts`:
 ```ts
 import { components } from "./_generated/api";
 import { StripeComponent } from "@ras-sh/convex-stripe";
+import Stripe from "stripe";
+
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: "2025-09-30.clover",
+});
 
 export const stripe = new StripeComponent(components.stripe, {
   getUserInfo: async (ctx) => {
@@ -49,9 +56,8 @@ export const stripe = new StripeComponent(components.stripe, {
   products: {
     premiumMonthly: { productId: "prod_xxx", priceId: "price_xxx" },
   },
-  apiKey: process.env.STRIPE_API_KEY!,
+  stripe: stripeClient,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
-  mode: "test",
 });
 
 export const {
@@ -150,16 +156,32 @@ function SubscriptionPage() {
 
 ## Configuration
 
+### Environment Variables
+
 Set environment variables in your Convex dashboard:
 
 ```bash
-STRIPE_API_KEY=sk_test_xxx
+STRIPE_SECRET_KEY=sk_test_xxx
 STRIPE_WEBHOOK_SECRET=whsec_xxx
 ```
+
+### Webhook Setup
 
 Configure webhook endpoint in Stripe dashboard:
 - URL: `https://your-deployment.convex.site/stripe/webhook`
 - Events: Select all checkout, customer, subscription, invoice, product, and price events
+
+### Supported Stripe API Versions
+
+This component supports Stripe SDK versions `^18.0.0` and `^19.0.0`. We recommend using the latest version:
+
+```ts
+const stripeClient = new Stripe(process.env.STRIPE_API_KEY!, {
+  apiVersion: "2025-09-30.clover", // Latest stable API version
+});
+```
+
+The component uses a stable subset of Stripe's API that works across these versions.
 
 ## API
 
@@ -193,6 +215,26 @@ Configure webhook endpoint in Stripe dashboard:
 - `formatCurrency(amountInCents, currency)` - Format prices (e.g., `formatCurrency(1999, "usd")` → "$19.99")
 - `formatDate(timestamp, options?)` - Format Unix timestamps
 - `isSubscriptionActive(status)` - Check if subscription is active or trialing
+
+## Maintenance and Updates
+
+### Schema Updates
+
+This component stores Stripe data in Convex tables and keeps them in sync via webhooks. When you update the component version:
+
+1. Update the package: `npm install @ras-sh/convex-stripe@latest`
+2. Deploy: `npx convex deploy`
+3. Convex automatically handles schema migrations
+
+### Stripe API Changes
+
+The component is designed to work with Stripe SDK versions `^18.0.0` and `^19.0.0`. You can upgrade your Stripe SDK independently:
+
+```bash
+npm install stripe@latest
+```
+
+For new Stripe features, update both packages and check the component's changelog for any required configuration changes.
 
 ## License
 

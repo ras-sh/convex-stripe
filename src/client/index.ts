@@ -1,5 +1,5 @@
 import { actionGeneric, type HttpRouter, queryGeneric } from "convex/server";
-import Stripe from "stripe";
+import type Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
 import type { UseApi } from "../shared.js";
 import {
@@ -25,6 +25,11 @@ export type { ProductConfig, StripeConfig, WebhookConfig } from "./types.js";
  * ```ts
  * import { components } from "./_generated/api";
  * import { StripeComponent } from "@ras-sh/convex-stripe";
+ * import Stripe from "stripe";
+ *
+ * const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+ *   apiVersion: "2025-09-30.clover",
+ * });
  *
  * export const stripe = new StripeComponent(components.stripe, {
  *   getUserInfo: async (ctx) => {
@@ -34,9 +39,8 @@ export type { ProductConfig, StripeConfig, WebhookConfig } from "./types.js";
  *   products: {
  *     premiumMonthly: { productId: "prod_xxx", priceId: "price_xxx" }
  *   },
- *   apiKey: process.env.STRIPE_API_KEY!,
+ *   stripe: stripeClient,
  *   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
- *   mode: "test"
  * });
  * ```
  */
@@ -65,11 +69,7 @@ export class StripeComponent<
     this.config = config;
     this.products = config.products ?? ({} as Products);
     this.webhookSecret = config.webhookSecret;
-
-    this.stripe = new Stripe(config.apiKey, {
-      apiVersion: "2025-09-30.clover",
-      typescript: true,
-    });
+    this.stripe = config.stripe;
 
     // Initialize method groups
     this.customerMethods = new CustomerMethods(this.component, this.stripe);
