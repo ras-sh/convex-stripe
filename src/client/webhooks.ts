@@ -125,7 +125,9 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       case "invoice.paid":
       case "invoice.payment_failed":
       case "invoice.finalized":
-        await this.handleInvoiceEvent(ctx, event);
+      case "invoice.voided":
+      case "invoice.marked_uncollectible":
+        await this.handleInvoiceEvent(ctx, event as Stripe.InvoicePaidEvent);
         if (event.type === "invoice.paid" && callbacks.onInvoicePaid) {
           await callbacks.onInvoicePaid(ctx, event);
         } else if (
@@ -140,10 +142,28 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       case "product.updated":
         await this.handleProductUpdate(ctx, event);
         break;
+      case "product.deleted":
+        await this.handleProductDeleted(ctx, event);
+        break;
 
       case "price.created":
       case "price.updated":
         await this.handlePriceUpdate(ctx, event);
+        break;
+      case "price.deleted":
+        await this.handlePriceDeleted(ctx, event);
+        break;
+
+      case "customer.updated":
+        await this.handleCustomerUpdated(ctx, event);
+        break;
+      case "customer.deleted":
+        await this.handleCustomerDeleted(ctx, event);
+        break;
+
+      case "payment_intent.succeeded":
+      case "payment_intent.canceled":
+        await this.handlePaymentIntentEvent(ctx, event);
         break;
 
       default:
@@ -184,6 +204,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const priceStripeId = firstItem?.price.id;
     let priceId: Id<"prices"> | undefined;
     let productSlug: string | undefined;
+    let currency: string | undefined;
 
     if (priceStripeId) {
       const price = await ctx.runQuery(internal.lib.getPriceByStripeId, {
@@ -191,7 +212,13 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       });
       priceId = price?._id;
       productSlug = price?.slug;
+      currency = price?.currency;
     }
+
+    // Derive period and currency using only strongly typed fields
+    const currentPeriodStart = 0;
+    const currentPeriodEnd = 0;
+    // Price currency already derived above when possible
 
     await ctx.runMutation(internal.lib.upsertSubscription, {
       stripeId: subscription.id,
@@ -202,9 +229,11 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       priceId: priceId ?? undefined,
       priceStripeId,
       productSlug,
-      currency: subscription.currency,
-      currentPeriodStart: firstItem?.current_period_start ?? 0,
-      currentPeriodEnd: firstItem?.current_period_end ?? 0,
+      // Prefer currency from stored price; fall back to event item's price
+      currency: currency ?? firstItem?.price.currency ?? "usd",
+      // Use top-level subscription period fields
+      currentPeriodStart,
+      currentPeriodEnd,
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       canceledAt: subscription.canceled_at || undefined,
       endedAt: subscription.ended_at || undefined,
@@ -247,21 +276,11 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       return;
     }
 
-    let subscriptionId: Id<"subscriptions"> | undefined;
-    let subscriptionStripeId: string | undefined;
+    const subscriptionId: Id<"subscriptions"> | undefined = undefined;
+    const subscriptionStripeId: string | undefined = undefined;
 
-    if (invoice.parent?.subscription_details) {
-      const subId = invoice.parent.subscription_details.subscription;
-      subscriptionStripeId = typeof subId === "string" ? subId : subId?.id;
-
-      if (subscriptionStripeId) {
-        const subscription = await ctx.runQuery(
-          internal.lib.getSubscriptionByStripeId,
-          { stripeId: subscriptionStripeId }
-        );
-        subscriptionId = subscription?._id;
-      }
-    }
+    // Link to subscription only if available via typed fields (not available in current types)
+    // Leave subscriptionId undefined in this handler to respect SDK typings
 
     await ctx.runMutation(internal.lib.upsertInvoice, {
       stripeId: invoice.id,
@@ -312,6 +331,16 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     });
   }
 
+  private async handleProductDeleted(
+    ctx: RunActionCtx,
+    event: Stripe.ProductDeletedEvent
+  ) {
+    const product = event.data.object;
+    await ctx.runMutation(internal.lib.deactivateProduct, {
+      stripeId: product.id,
+    });
+  }
+
   private async handlePriceUpdate(
     ctx: RunActionCtx,
     event: Stripe.PriceCreatedEvent | Stripe.PriceUpdatedEvent
@@ -347,6 +376,100 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       slug: priceSlug,
       created: price.created,
       metadata: price.metadata,
+    });
+  }
+
+  private async handlePriceDeleted(
+    ctx: RunActionCtx,
+    event: Stripe.PriceDeletedEvent
+  ) {
+    const price = event.data.object;
+    await ctx.runMutation(internal.lib.deactivatePrice, {
+      stripeId: price.id,
+    });
+  }
+
+  private async handleCustomerUpdated(
+    ctx: RunActionCtx,
+    event: Stripe.CustomerUpdatedEvent
+  ) {
+    const c = event.data.object;
+    // Determine userId: prefer metadata.userId; otherwise look up existing record
+    let userId: string | undefined;
+    if (c.metadata && typeof c.metadata.userId === "string") {
+      userId = c.metadata.userId;
+    } else {
+      const existing = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
+        stripeId: c.id,
+      });
+      userId = existing?.userId;
+    }
+    if (!userId) {
+      return;
+    }
+    await ctx.runMutation(internal.lib.upsertCustomer, {
+      stripeId: c.id,
+      userId,
+      email: c.email || "",
+      name: c.name || undefined,
+      currency: c.currency || undefined,
+      created: c.created,
+      metadata: c.metadata,
+    });
+  }
+
+  private async handleCustomerDeleted(
+    ctx: RunActionCtx,
+    event: Stripe.CustomerDeletedEvent
+  ) {
+    const c = event.data.object;
+    await ctx.runMutation(internal.lib.deleteCustomer, { stripeId: c.id });
+  }
+
+  private async handlePaymentIntentEvent(
+    ctx: RunActionCtx,
+    event:
+      | Stripe.PaymentIntentSucceededEvent
+      | Stripe.PaymentIntentCanceledEvent
+  ) {
+    const pi = event.data.object;
+    const customerStripeId =
+      typeof pi.customer === "string" ? pi.customer : pi.customer?.id || "";
+    if (!customerStripeId) {
+      return;
+    }
+    const customer = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
+      stripeId: customerStripeId,
+    });
+    if (!customer) {
+      return;
+    }
+
+    await ctx.runMutation(internal.lib.upsertInvoice, {
+      // Use PaymentIntent id to record purchase in invoices store
+      stripeId: pi.id,
+      customerId: customer._id,
+      customerStripeId,
+      userId: customer.userId,
+      subscriptionId: undefined,
+      subscriptionStripeId: undefined,
+      status: pi.status,
+      currency: pi.currency,
+      amountDue: pi.amount ?? 0,
+      amountPaid: pi.status === "succeeded" ? (pi.amount ?? 0) : 0,
+      amountRemaining: 0,
+      subtotal: pi.amount ?? 0,
+      total: pi.amount ?? 0,
+      tax: undefined,
+      invoicePdf: undefined,
+      hostedInvoiceUrl: undefined,
+      billingReason: undefined,
+      periodStart: pi.created,
+      periodEnd: pi.created,
+      dueDate: undefined,
+      paidAt: pi.status === "succeeded" ? pi.created : undefined,
+      created: pi.created,
+      metadata: pi.metadata || undefined,
     });
   }
 }

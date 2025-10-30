@@ -42,7 +42,6 @@ export type Mounts = {
     listUserSubscriptions: FunctionReference<"query", "internal", { userId: string }, any>;
     getSubscriptionByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
     listUserInvoices: FunctionReference<"query", "internal", { userId: string; limit?: number }, any>;
-    listUserPaymentMethods: FunctionReference<"query", "internal", { userId: string }, any>;
 
     // Mutations
     upsertCustomer: FunctionReference<"mutation", "internal", any, string>;

@@ -14,10 +14,10 @@ Convex component for Stripe integration with subscription management, webhooks, 
 ## Installation
 
 ```bash
-npm install @ras-sh/convex-stripe stripe
+npm install @ras-sh/convex-stripe stripe convex-helpers
 ```
 
-This component requires `stripe` as a peer dependency, giving you control over the Stripe version and allowing you to use the Stripe SDK directly for advanced operations.
+This component requires `stripe` and `convex-helpers` as peer dependencies, giving you control over the Stripe version and allowing you to use the Stripe SDK directly for advanced operations.
 
 ## Quick Start
 
@@ -62,10 +62,14 @@ export const stripe = new StripeComponent(components.stripe, {
 
 export const {
   getCurrentSubscription,
+  listUserSubscriptions,
   listActiveProducts,
+  getConfiguredProducts,
+  listUserInvoices,
   generateCheckoutLink,
   generateBillingPortalLink,
   cancelSubscription,
+  syncProducts,
 } = stripe.api();
 ```
 
@@ -84,6 +88,40 @@ stripe.registerRoutes(http, {
 });
 
 export default http;
+```
+
+#### Webhook Callbacks (Optional)
+
+You can add custom handlers to respond to Stripe webhook events:
+
+```ts
+stripe.registerRoutes(http, {
+  path: "/stripe/webhook",
+  onCheckoutComplete: async (ctx, event) => {
+    // Called when a checkout session completes
+    console.log("Checkout completed:", event.data.object.id);
+  },
+  onSubscriptionCreated: async (ctx, event) => {
+    // Called when a subscription is created
+    console.log("Subscription created:", event.data.object.id);
+  },
+  onSubscriptionUpdated: async (ctx, event) => {
+    // Called when a subscription is updated
+    console.log("Subscription updated:", event.data.object.id);
+  },
+  onSubscriptionDeleted: async (ctx, event) => {
+    // Called when a subscription is deleted
+    console.log("Subscription deleted:", event.data.object.id);
+  },
+  onInvoicePaid: async (ctx, event) => {
+    // Called when an invoice is paid
+    console.log("Invoice paid:", event.data.object.id);
+  },
+  onInvoiceFailed: async (ctx, event) => {
+    // Called when invoice payment fails
+    console.log("Invoice payment failed:", event.data.object.id);
+  },
+});
 ```
 
 ### 4. Set up React provider
@@ -176,7 +214,7 @@ Configure webhook endpoint in Stripe dashboard:
 This component supports Stripe SDK versions `^18.0.0` and `^19.0.0`. We recommend using the latest version:
 
 ```ts
-const stripeClient = new Stripe(process.env.STRIPE_API_KEY!, {
+const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-09-30.clover", // Latest stable API version
 });
 ```
@@ -188,9 +226,11 @@ The component uses a stable subset of Stripe's API that works across these versi
 ### Queries
 
 - `getCurrentSubscription()` - Get active subscription for current user
+- `listUserSubscriptions()` - List all subscriptions (past and present) for current user
 - `listActiveProducts()` - List all products from Stripe
 - `getConfiguredProducts()` - Get products configured with slugs
 - `listUserInvoices({ limit? })` - List invoices for current user
+- `listUserPaymentMethods()` - List saved payment methods for current user
 
 ### Actions
 
@@ -203,6 +243,7 @@ The component uses a stable subset of Stripe's API that works across these versi
 
 - `useSubscription()` - Get subscription with formatted dates and status helpers
 - `useCurrentSubscription()` - Get raw subscription data
+- `useUserSubscriptions()` - List all subscriptions (past and present)
 - `useActiveProducts()` - List all products
 - `useConfiguredProducts()` - Get products with slugs
 - `useUserInvoices({ limit? })` - List invoices
@@ -215,6 +256,28 @@ The component uses a stable subset of Stripe's API that works across these versi
 - `formatCurrency(amountInCents, currency)` - Format prices (e.g., `formatCurrency(1999, "usd")` → "$19.99")
 - `formatDate(timestamp, options?)` - Format Unix timestamps
 - `isSubscriptionActive(status)` - Check if subscription is active or trialing
+
+### Advanced Methods
+
+These methods are available on the `StripeComponent` instance for advanced use cases:
+
+- `getCustomerByUserId(userId)` - Get Stripe customer record by user ID
+- `createCustomer(userId, email, name?)` - Create a new Stripe customer
+- `getProductBySlug(slug)` - Get product by custom slug
+- `getPricesForProduct(productId)` - Get all prices for a product
+- `getPriceBySlug(slug)` - Get price by custom slug
+
+**Example:**
+```ts
+// In convex/stripe.ts
+export const getCustomer = queryGeneric({
+  args: {},
+  handler: async (ctx) => {
+    const { userId } = await getCurrentUser(ctx);
+    return await stripe.getCustomerByUserId(ctx, { userId });
+  },
+});
+```
 
 ## Maintenance and Updates
 

@@ -11,7 +11,6 @@ type StripeAPI = {
   listActiveProducts: FunctionReference<"query">;
   getConfiguredProducts: FunctionReference<"query">;
   listUserInvoices: FunctionReference<"query">;
-  listUserPaymentMethods: FunctionReference<"query">;
   generateCheckoutLink: FunctionReference<"action">;
   generateBillingPortalLink: FunctionReference<"action">;
   cancelSubscription: FunctionReference<"action">;
@@ -131,19 +130,6 @@ export function useConfiguredProducts() {
 export function useUserInvoices(args?: { limit?: number }) {
   const api = useStripeAPI();
   return useQuery(api.listUserInvoices, args);
-}
-
-/**
- * List payment methods for the logged-in user
- *
- * @example
- * ```tsx
- * const paymentMethods = useUserPaymentMethods();
- * ```
- */
-export function useUserPaymentMethods() {
-  const api = useStripeAPI();
-  return useQuery(api.listUserPaymentMethods);
 }
 
 // ===== ACTION HOOKS =====

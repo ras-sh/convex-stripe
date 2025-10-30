@@ -207,42 +207,6 @@ export const schema = defineSchema({
     .index("userId", ["userId"])
     .index("userId_status", ["userId", "status"])
     .index("subscriptionId", ["subscriptionId"]),
-
-  /**
-   * Payment Methods table
-   * Stores customer payment methods
-   */
-  paymentMethods: defineTable({
-    // Stripe payment method ID
-    stripeId: v.string(),
-    // Customer ID (references customers table)
-    customerId: v.id("customers"),
-    // Stripe customer ID for reference
-    customerStripeId: v.string(),
-    // User ID for quick lookups
-    userId: v.string(),
-    // Payment method type (e.g., "card", "us_bank_account")
-    type: v.string(),
-    // Card details (if type is "card")
-    card: v.optional(
-      v.object({
-        brand: v.string(),
-        last4: v.string(),
-        expMonth: v.number(),
-        expYear: v.number(),
-      })
-    ),
-    // Whether this is the default payment method
-    isDefault: v.boolean(),
-    // Stripe timestamps
-    created: v.number(),
-    // Custom metadata (Stripe.Metadata is Record<string, string>)
-    metadata: v.optional(v.record(v.string(), v.string())),
-  })
-    .index("stripeId", ["stripeId"])
-    .index("customerId", ["customerId"])
-    .index("userId", ["userId"])
-    .index("userId_isDefault", ["userId", "isDefault"]),
 });
 
 export default schema;

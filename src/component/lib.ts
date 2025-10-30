@@ -1,12 +1,11 @@
 import { v } from "convex/values";
 import {
-  vDeletePaymentMethodArgs,
+  vDeleteCustomerArgs,
   vDeleteSubscriptionArgs,
   vListUserInvoicesArgs,
   vStripeId,
   vUpsertCustomerArgs,
   vUpsertInvoiceArgs,
-  vUpsertPaymentMethodArgs,
   vUpsertPriceArgs,
   vUpsertProductArgs,
   vUpsertSubscriptionArgs,
@@ -176,18 +175,6 @@ export const listUserInvoices = query({
   },
 });
 
-/**
- * Get payment methods for a user
- */
-export const listUserPaymentMethods = query({
-  args: { userId: vUserId },
-  handler: async (ctx, args) =>
-    await ctx.db
-      .query("paymentMethods")
-      .withIndex("userId", (q) => q.eq("userId", args.userId))
-      .collect(),
-});
-
 // ===== INTERNAL MUTATIONS =====
 
 /**
@@ -355,42 +342,49 @@ export const upsertInvoice = internalMutation({
 });
 
 /**
- * Create or update a payment method
+ * Delete a customer by Stripe ID
  */
-export const upsertPaymentMethod = internalMutation({
-  args: vUpsertPaymentMethodArgs.fields,
+export const deleteCustomer = internalMutation({
+  args: vDeleteCustomerArgs.fields,
   handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("paymentMethods")
+    const customer = await ctx.db
+      .query("customers")
       .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
       .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        card: args.card,
-        isDefault: args.isDefault,
-        metadata: args.metadata,
-      });
-      return existing._id;
+    if (customer) {
+      await ctx.db.delete(customer._id);
     }
-
-    return await ctx.db.insert("paymentMethods", args);
   },
 });
 
 /**
- * Delete a payment method
+ * Deactivate a product (set active=false) by Stripe ID
  */
-export const deletePaymentMethod = internalMutation({
-  args: vDeletePaymentMethodArgs.fields,
+export const deactivateProduct = internalMutation({
+  args: v.object({ stripeId: vStripeId }),
   handler: async (ctx, args) => {
-    const paymentMethod = await ctx.db
-      .query("paymentMethods")
+    const existing = await ctx.db
+      .query("products")
       .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
       .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { active: false });
+    }
+  },
+});
 
-    if (paymentMethod) {
-      await ctx.db.delete(paymentMethod._id);
+/**
+ * Deactivate a price (set active=false) by Stripe ID
+ */
+export const deactivatePrice = internalMutation({
+  args: v.object({ stripeId: vStripeId }),
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("prices")
+      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .first();
+    if (existing) {
+      await ctx.db.patch(existing._id, { active: false });
     }
   },
 });

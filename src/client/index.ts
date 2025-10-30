@@ -10,7 +10,6 @@ import {
 } from "../validators.js";
 import { CustomerMethods } from "./customers.js";
 import { InvoiceMethods } from "./invoices.js";
-import { PaymentMethodMethods } from "./paymentMethods.js";
 import { ProductMethods } from "./products.js";
 import { SubscriptionMethods } from "./subscriptions.js";
 import type { ProductConfig, StripeConfig, WebhookConfig } from "./types.js";
@@ -61,7 +60,6 @@ export class StripeComponent<
   private readonly productMethods: ProductMethods<Products>;
   private readonly subscriptionMethods: SubscriptionMethods<Products>;
   private readonly invoiceMethods: InvoiceMethods;
-  private readonly paymentMethodMethods: PaymentMethodMethods;
   private readonly webhookHandler: WebhookHandler<Products>;
 
   constructor(component: UseApi<typeof api>, config: StripeConfig<Products>) {
@@ -86,7 +84,6 @@ export class StripeComponent<
       this.customerMethods.createCustomer.bind(this.customerMethods)
     );
     this.invoiceMethods = new InvoiceMethods(this.component);
-    this.paymentMethodMethods = new PaymentMethodMethods(this.component);
     this.webhookHandler = new WebhookHandler(
       this.component,
       this.stripe,
@@ -183,14 +180,6 @@ export class StripeComponent<
     return this.invoiceMethods.listUserInvoices(...args);
   }
 
-  // ===== PAYMENT METHOD METHODS =====
-
-  listUserPaymentMethods(
-    ...args: Parameters<PaymentMethodMethods["listUserPaymentMethods"]>
-  ) {
-    return this.paymentMethodMethods.listUserPaymentMethods(...args);
-  }
-
   // ===== PUBLIC API =====
 
   /**
@@ -233,14 +222,6 @@ export class StripeComponent<
             userId,
             limit: args.limit,
           });
-        },
-      }),
-
-      listUserPaymentMethods: queryGeneric({
-        args: {},
-        handler: async (ctx) => {
-          const { userId } = await this.config.getUserInfo(ctx);
-          return await this.listUserPaymentMethods(ctx, { userId });
         },
       }),
 

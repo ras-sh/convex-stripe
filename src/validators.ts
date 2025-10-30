@@ -16,14 +16,6 @@ export const vUserId = v.string();
 export const vStripeId = v.string();
 export const vMetadata = v.optional(v.record(v.string(), v.string()));
 
-// Nested object validators
-const vCard = v.object({
-  brand: v.string(),
-  last4: v.string(),
-  expMonth: v.number(),
-  expYear: v.number(),
-});
-
 // Mutation argument validators
 export const vUpsertCustomerArgs = v.object({
   stripeId: v.string(),
@@ -110,23 +102,11 @@ export const vUpsertInvoiceArgs = v.object({
   metadata: vMetadata,
 });
 
-export const vUpsertPaymentMethodArgs = v.object({
-  stripeId: v.string(),
-  customerId: vStripeCustomerId,
-  customerStripeId: v.string(),
-  userId: v.string(),
-  type: v.string(),
-  card: v.optional(vCard),
-  isDefault: v.boolean(),
-  created: v.number(),
-  metadata: vMetadata,
-});
-
 export const vDeleteSubscriptionArgs = v.object({
   stripeId: v.string(),
 });
 
-export const vDeletePaymentMethodArgs = v.object({
+export const vDeleteCustomerArgs = v.object({
   stripeId: v.string(),
 });
 
