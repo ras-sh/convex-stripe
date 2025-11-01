@@ -82,7 +82,7 @@ export class StripeComponent<
       this.customerMethods.getCustomerByUserId.bind(this.customerMethods),
       this.customerMethods.createCustomer.bind(this.customerMethods)
     );
-    this.invoiceMethods = new InvoiceMethods(this.component);
+    this.invoiceMethods = new InvoiceMethods(this.component, this.stripe);
     this.webhookHandler = new WebhookHandler(
       this.component,
       this.stripe,
@@ -139,6 +139,12 @@ export class StripeComponent<
     return this.productMethods.syncProducts(...args);
   }
 
+  // ===== CUSTOMER SYNC METHODS =====
+
+  syncCustomers(...args: Parameters<CustomerMethods["syncCustomers"]>) {
+    return this.customerMethods.syncCustomers(...args);
+  }
+
   // ===== SUBSCRIPTION METHODS =====
 
   getCurrentSubscription(
@@ -173,10 +179,42 @@ export class StripeComponent<
     return this.subscriptionMethods.cancelSubscription(...args);
   }
 
+  syncSubscriptions(
+    ...args: Parameters<SubscriptionMethods<Products>["syncSubscriptions"]>
+  ) {
+    return this.subscriptionMethods.syncSubscriptions(...args);
+  }
+
   // ===== INVOICE METHODS =====
 
   listUserInvoices(...args: Parameters<InvoiceMethods["listUserInvoices"]>) {
     return this.invoiceMethods.listUserInvoices(...args);
+  }
+
+  syncInvoices(...args: Parameters<InvoiceMethods["syncInvoices"]>) {
+    return this.invoiceMethods.syncInvoices(...args);
+  }
+
+  // ===== SYNC ALL METHOD =====
+
+  /**
+   * Sync all data from Stripe to Convex
+   * This syncs products, prices, customers, subscriptions, and invoices
+   * Useful when migrating from another Stripe integration
+   */
+  async syncAll(ctx: Parameters<typeof this.syncProducts>[0]) {
+    // Sync in order of dependencies:
+    // 1. Products & Prices (no dependencies)
+    await this.syncProducts(ctx);
+
+    // 2. Customers (depends on nothing)
+    await this.syncCustomers(ctx);
+
+    // 3. Subscriptions (depends on customers and prices)
+    await this.syncSubscriptions(ctx);
+
+    // 4. Invoices (depends on customers and subscriptions)
+    await this.syncInvoices(ctx);
   }
 
   // ===== PUBLIC API =====

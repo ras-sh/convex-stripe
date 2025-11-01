@@ -3,15 +3,60 @@ import { action } from "./_generated/server";
 import { stripe } from "./stripe";
 
 /**
- * Example: Sync products from Stripe to Convex
+ * Example: Sync all data from Stripe to Convex
+ * This syncs products, prices, customers, subscriptions, and invoices
+ * This should be called from backend code only (e.g., admin dashboard, cron job)
+ * NOT from the frontend
+ *
+ * Use this when migrating from another Stripe integration to seamlessly
+ * transfer all your existing data
+ */
+export const syncAllFromStripe = action({
+  args: {},
+  handler: async (ctx) => {
+    await stripe.syncAll(ctx);
+  },
+});
+
+/**
+ * Example: Sync only products from Stripe to Convex
  * This should be called from backend code only (e.g., admin dashboard, cron job)
  * NOT from the frontend
  */
 export const syncProductsFromStripe = action({
   args: {},
   handler: async (ctx) => {
-    // Use stripe methods directly in backend code
     await stripe.syncProducts(ctx);
+  },
+});
+
+/**
+ * Example: Sync only customers from Stripe to Convex
+ */
+export const syncCustomersFromStripe = action({
+  args: {},
+  handler: async (ctx) => {
+    await stripe.syncCustomers(ctx);
+  },
+});
+
+/**
+ * Example: Sync only subscriptions from Stripe to Convex
+ */
+export const syncSubscriptionsFromStripe = action({
+  args: {},
+  handler: async (ctx) => {
+    await stripe.syncSubscriptions(ctx);
+  },
+});
+
+/**
+ * Example: Sync only invoices from Stripe to Convex
+ */
+export const syncInvoicesFromStripe = action({
+  args: {},
+  handler: async (ctx) => {
+    await stripe.syncInvoices(ctx);
   },
 });
 
