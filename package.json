@@ -1,6 +1,6 @@
 {
   "name": "@ras-sh/convex-stripe",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Convex component for Stripe integration with subscription management, webhooks, and billing portal",
   "keywords": [
