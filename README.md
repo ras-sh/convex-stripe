@@ -69,7 +69,6 @@ export const {
   generateCheckoutLink,
   generateBillingPortalLink,
   cancelSubscription,
-  syncProducts,
 } = stripe.api();
 ```
 

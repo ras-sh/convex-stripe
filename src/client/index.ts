@@ -244,13 +244,6 @@ export class StripeComponent<
             immediate: args.immediate,
           }),
       }),
-
-      syncProducts: actionGeneric({
-        args: {},
-        handler: async (ctx) => {
-          await this.syncProducts(ctx);
-        },
-      }),
     };
   }
 

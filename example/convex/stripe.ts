@@ -32,7 +32,8 @@ export const stripe = new StripeComponent(components.stripe, {
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET as string,
 });
 
-// Export all the Stripe API methods
+// Export the Stripe API for frontend use
+// These are wrapped with getUserInfo() and can be called from React hooks
 export const {
   getCurrentSubscription,
   listUserSubscriptions,
@@ -41,5 +42,10 @@ export const {
   generateCheckoutLink,
   generateBillingPortalLink,
   cancelSubscription,
-  syncProducts,
 } = stripe.api();
+
+// For backend-only operations, import and use stripe directly:
+// - stripe.syncProducts(ctx) - Sync products from Stripe
+// - stripe.createCustomer(ctx, { userId, email, name }) - Create customer
+// - stripe.getCustomerByUserId(ctx, { userId }) - Get customer
+// etc.
