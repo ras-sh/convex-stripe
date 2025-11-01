@@ -44,15 +44,22 @@ export type Mounts = {
     listUserInvoices: FunctionReference<"query", "public", { userId: string; limit?: number }, any>;
 
     // Mutations
-    upsertCustomer: FunctionReference<"mutation", "public", any, string>;
-    upsertProduct: FunctionReference<"mutation", "public", any, string>;
-    upsertPrice: FunctionReference<"mutation", "public", any, string>;
-    upsertSubscription: FunctionReference<"mutation", "public", any, string>;
+    upsertCustomer: FunctionReference<"mutation", "public", any, any>;
+    upsertProduct: FunctionReference<"mutation", "public", any, any>;
+    upsertPrice: FunctionReference<"mutation", "public", any, any>;
+    upsertSubscription: FunctionReference<"mutation", "public", any, any>;
     deleteSubscription: FunctionReference<"mutation", "public", { stripeId: string }, void>;
-    upsertInvoice: FunctionReference<"mutation", "public", any, string>;
+    upsertInvoice: FunctionReference<"mutation", "public", any, any>;
     deleteCustomer: FunctionReference<"mutation", "public", { stripeId: string }, void>;
     deactivateProduct: FunctionReference<"mutation", "public", { stripeId: string }, void>;
     deactivatePrice: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+
+    // Actions (Sync)
+    syncProducts: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;
+    syncCustomers: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;
+    syncSubscriptions: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;
+    syncInvoices: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;
+    syncAll: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;
   };
 };
 // For now fullApiWithMounts is only fullApi which provides

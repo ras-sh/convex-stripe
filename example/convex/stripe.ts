@@ -29,12 +29,15 @@ export const stripe = new StripeComponent(components.stripe, {
     },
   },
   stripe: stripeClient,
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY as string,
   webhookSecret: process.env.STRIPE_WEBHOOK_SECRET as string,
 });
 
 // Export the Stripe API for frontend use
-// These are wrapped with getUserInfo() and can be called from React hooks
+// Public actions/queries are wrapped with getUserInfo() and can be called from React hooks
+// Sync functions are internal and can only be called from backend code (actions, mutations)
 export const {
+  // Public - can be called from frontend
   getCurrentSubscription,
   listUserSubscriptions,
   getConfiguredProducts,
@@ -42,10 +45,15 @@ export const {
   generateCheckoutLink,
   generateBillingPortalLink,
   cancelSubscription,
+  // Internal - can only be called from backend code
+  syncAll,
+  syncProducts,
+  syncCustomers,
+  syncSubscriptions,
+  syncInvoices,
 } = stripe.api();
 
-// For backend-only operations, import and use stripe directly:
-// - stripe.syncProducts(ctx) - Sync products from Stripe
+// For other backend-only operations, import and use stripe directly:
 // - stripe.createCustomer(ctx, { userId, email, name }) - Create customer
 // - stripe.getCustomerByUserId(ctx, { userId }) - Get customer
 // etc.

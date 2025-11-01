@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import Stripe from "stripe";
 import {
   vDeleteCustomerArgs,
   vDeleteSubscriptionArgs,
@@ -11,7 +12,8 @@ import {
   vUpsertSubscriptionArgs,
   vUserId,
 } from "../validators.js";
-import { mutation, query } from "./_generated/server.js";
+import { api } from "./_generated/api.js";
+import { action, mutation, query } from "./_generated/server.js";
 
 // ===== QUERIES =====
 
@@ -389,6 +391,286 @@ export const deactivatePrice = mutation({
   },
 });
 
-// Note: Actions for creating checkout sessions, portal links, etc.
-// will be implemented in the client API layer, not here.
-// These internal functions are meant to be called by webhooks and the client layer.
+// ===== SYNC ACTIONS =====
+
+/**
+ * Sync all products and prices from Stripe to Convex
+ * Can be called from the Convex dashboard
+ */
+export const syncProducts = action({
+  args: {
+    stripeSecretKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const stripe = new Stripe(args.stripeSecretKey, {
+      apiVersion: "2025-10-29.clover",
+    });
+
+    const products = await stripe.products.list({
+      active: true,
+      limit: 100,
+    });
+
+    for (const product of products.data) {
+      // Upsert product
+      const productId = await ctx.runMutation(api.lib.upsertProduct, {
+        stripeId: product.id,
+        name: product.name,
+        description: product.description || undefined,
+        active: product.active,
+        type: product.type || undefined,
+        slug: undefined,
+        created: product.created,
+        updated: product.updated,
+        metadata: product.metadata,
+      });
+
+      if (!productId) {
+        continue;
+      }
+
+      // Fetch and upsert prices for this product
+      const prices = await stripe.prices.list({
+        product: product.id,
+        limit: 100,
+      });
+
+      for (const price of prices.data) {
+        await ctx.runMutation(api.lib.upsertPrice, {
+          stripeId: price.id,
+          productId,
+          productStripeId: product.id,
+          active: price.active,
+          currency: price.currency,
+          unitAmount: price.unit_amount || undefined,
+          billingScheme: price.billing_scheme || undefined,
+          type: price.type,
+          recurringInterval: price.recurring?.interval || undefined,
+          recurringIntervalCount: price.recurring?.interval_count || undefined,
+          slug: undefined,
+          created: price.created,
+          metadata: price.metadata,
+        });
+      }
+    }
+  },
+});
+
+/**
+ * Sync all customers from Stripe to Convex
+ * Can be called from the Convex dashboard
+ */
+export const syncCustomers = action({
+  args: {
+    stripeSecretKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const stripe = new Stripe(args.stripeSecretKey, {
+      apiVersion: "2025-10-29.clover",
+    });
+
+    let hasMore = true;
+    let startingAfter: string | undefined;
+
+    while (hasMore) {
+      const customers = await stripe.customers.list({
+        limit: 100,
+        starting_after: startingAfter,
+      });
+
+      for (const customer of customers.data) {
+        if (customer.deleted) {
+          continue;
+        }
+
+        const userId = customer.metadata?.userId;
+        if (!userId) {
+          continue;
+        }
+
+        await ctx.runMutation(api.lib.upsertCustomer, {
+          stripeId: customer.id,
+          userId,
+          email: customer.email || "",
+          name: customer.name || undefined,
+          currency: customer.currency || undefined,
+          created: customer.created,
+          metadata: customer.metadata,
+        });
+      }
+
+      hasMore = customers.has_more;
+      if (hasMore && customers.data.length > 0) {
+        startingAfter = customers.data[customers.data.length - 1]?.id;
+      }
+    }
+  },
+});
+
+/**
+ * Sync all subscriptions from Stripe to Convex
+ * Can be called from the Convex dashboard
+ */
+export const syncSubscriptions = action({
+  args: {
+    stripeSecretKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const stripe = new Stripe(args.stripeSecretKey, {
+      apiVersion: "2025-10-29.clover",
+    });
+
+    let hasMore = true;
+    let startingAfter: string | undefined;
+
+    while (hasMore) {
+      const subscriptions = await stripe.subscriptions.list({
+        limit: 100,
+        starting_after: startingAfter,
+      });
+
+      for (const subscription of subscriptions.data) {
+        const customer = await ctx.runQuery(api.lib.getCustomerByStripeId, {
+          stripeId: subscription.customer as string,
+        });
+
+        if (!customer) {
+          continue;
+        }
+
+        const price = subscription.items.data[0]?.price;
+        if (!price) {
+          continue;
+        }
+
+        const priceDoc = await ctx.runQuery(api.lib.getPriceByStripeId, {
+          stripeId: price.id,
+        });
+
+        const productSlug = priceDoc?.slug?.split("-")[0] ?? undefined;
+        const firstItem = subscription.items.data[0];
+        const currentPeriodStart = firstItem?.current_period_start ?? 0;
+        const currentPeriodEnd = firstItem?.current_period_end ?? 0;
+
+        await ctx.runMutation(api.lib.upsertSubscription, {
+          stripeId: subscription.id,
+          customerId: customer._id,
+          customerStripeId: subscription.customer as string,
+          userId: customer.userId,
+          status: subscription.status,
+          priceId: priceDoc?._id,
+          priceStripeId: price.id,
+          productSlug,
+          currency: subscription.currency,
+          currentPeriodStart,
+          currentPeriodEnd,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+          canceledAt: subscription.canceled_at || undefined,
+          endedAt: subscription.ended_at || undefined,
+          trialStart: subscription.trial_start || undefined,
+          trialEnd: subscription.trial_end || undefined,
+          created: subscription.created,
+          metadata: subscription.metadata || undefined,
+        });
+      }
+
+      hasMore = subscriptions.has_more;
+      if (hasMore && subscriptions.data.length > 0) {
+        startingAfter = subscriptions.data[subscriptions.data.length - 1]?.id;
+      }
+    }
+  },
+});
+
+/**
+ * Sync all invoices from Stripe to Convex
+ * Can be called from the Convex dashboard
+ */
+export const syncInvoices = action({
+  args: {
+    stripeSecretKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const stripe = new Stripe(args.stripeSecretKey, {
+      apiVersion: "2025-10-29.clover",
+    });
+
+    let hasMore = true;
+    let startingAfter: string | undefined;
+
+    while (hasMore) {
+      const invoices = await stripe.invoices.list({
+        limit: 100,
+        starting_after: startingAfter,
+      });
+
+      for (const invoice of invoices.data) {
+        const customer = await ctx.runQuery(api.lib.getCustomerByStripeId, {
+          stripeId: invoice.customer as string,
+        });
+
+        if (!customer) {
+          continue;
+        }
+
+        const subscriptionId: string | undefined = undefined;
+        const subscriptionStripeId: string | undefined = undefined;
+
+        await ctx.runMutation(api.lib.upsertInvoice, {
+          stripeId: invoice.id,
+          customerId: customer._id,
+          customerStripeId: invoice.customer as string,
+          userId: customer.userId,
+          subscriptionId,
+          subscriptionStripeId,
+          status: invoice.status || "draft",
+          currency: invoice.currency,
+          amountDue: invoice.amount_due,
+          amountPaid: invoice.amount_paid,
+          amountRemaining: invoice.amount_remaining,
+          subtotal: invoice.subtotal,
+          total: invoice.total,
+          tax: undefined,
+          invoicePdf: invoice.invoice_pdf || undefined,
+          hostedInvoiceUrl: invoice.hosted_invoice_url || undefined,
+          billingReason: invoice.billing_reason || undefined,
+          periodStart: invoice.period_start,
+          periodEnd: invoice.period_end,
+          dueDate: invoice.due_date || undefined,
+          paidAt: invoice.status_transitions?.paid_at || undefined,
+          created: invoice.created,
+          metadata: invoice.metadata || undefined,
+        });
+      }
+
+      hasMore = invoices.has_more;
+      if (hasMore && invoices.data.length > 0) {
+        startingAfter = invoices.data[invoices.data.length - 1]?.id;
+      }
+    }
+  },
+});
+
+/**
+ * Sync all data from Stripe to Convex
+ * Can be called from the Convex dashboard
+ */
+export const syncAll = action({
+  args: {
+    stripeSecretKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.runAction(api.lib.syncProducts, {
+      stripeSecretKey: args.stripeSecretKey,
+    });
+    await ctx.runAction(api.lib.syncCustomers, {
+      stripeSecretKey: args.stripeSecretKey,
+    });
+    await ctx.runAction(api.lib.syncSubscriptions, {
+      stripeSecretKey: args.stripeSecretKey,
+    });
+    await ctx.runAction(api.lib.syncInvoices, {
+      stripeSecretKey: args.stripeSecretKey,
+    });
+  },
+});

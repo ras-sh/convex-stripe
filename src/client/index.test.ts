@@ -10,6 +10,7 @@ describe("StripeComponent", () => {
 
     const instance = new StripeComponent(component, {
       getUserInfo: async () => ({ userId: "user_1", email: "u@example.com" }),
+      stripeSecretKey: "sk_test_123",
       webhookSecret: "whsec_test",
       stripe,
       products: {},

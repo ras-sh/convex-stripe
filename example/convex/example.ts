@@ -1,62 +1,43 @@
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { action } from "./_generated/server";
 import { stripe } from "./stripe";
 
 /**
+ * Sync functions are now exposed as internal actions!
+ *
+ * You can call them from backend code (actions/mutations):
+ * - await ctx.runAction(internal.stripe.syncAll, {})
+ * - await ctx.runAction(internal.stripe.syncProducts, {})
+ * - await ctx.runAction(internal.stripe.syncCustomers, {})
+ * - await ctx.runAction(internal.stripe.syncSubscriptions, {})
+ * - await ctx.runAction(internal.stripe.syncInvoices, {})
+ *
+ * Or call them from the Convex dashboard:
+ * - internal.stripe.syncAll({})
+ * - internal.stripe.syncProducts({})
+ * etc.
+ *
+ * Examples below:
+ */
+
+/**
  * Example: Sync all data from Stripe to Convex
  * This syncs products, prices, customers, subscriptions, and invoices
- * This should be called from backend code only (e.g., admin dashboard, cron job)
- * NOT from the frontend
- *
- * Use this when migrating from another Stripe integration to seamlessly
- * transfer all your existing data
  */
 export const syncAllFromStripe = action({
   args: {},
   handler: async (ctx) => {
-    await stripe.syncAll(ctx);
+    await ctx.runAction(internal.stripe.syncAll, {});
   },
 });
 
 /**
  * Example: Sync only products from Stripe to Convex
- * This should be called from backend code only (e.g., admin dashboard, cron job)
- * NOT from the frontend
  */
 export const syncProductsFromStripe = action({
   args: {},
   handler: async (ctx) => {
-    await stripe.syncProducts(ctx);
-  },
-});
-
-/**
- * Example: Sync only customers from Stripe to Convex
- */
-export const syncCustomersFromStripe = action({
-  args: {},
-  handler: async (ctx) => {
-    await stripe.syncCustomers(ctx);
-  },
-});
-
-/**
- * Example: Sync only subscriptions from Stripe to Convex
- */
-export const syncSubscriptionsFromStripe = action({
-  args: {},
-  handler: async (ctx) => {
-    await stripe.syncSubscriptions(ctx);
-  },
-});
-
-/**
- * Example: Sync only invoices from Stripe to Convex
- */
-export const syncInvoicesFromStripe = action({
-  args: {},
-  handler: async (ctx) => {
-    await stripe.syncInvoices(ctx);
+    await ctx.runAction(internal.stripe.syncProducts, {});
   },
 });
 

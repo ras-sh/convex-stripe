@@ -2,7 +2,6 @@ import type Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
 import type { RunActionCtx, RunQueryCtx, UseApi } from "../component/util.js";
 import type { StripeCustomer } from "../validators.js";
-import { extractMetadata, extractSubscriptionPeriod } from "./stripeUtils.js";
 import type { ProductConfig, StripeConfig } from "./types.js";
 
 type Customer = StripeCustomer;
@@ -177,75 +176,12 @@ export class SubscriptionMethods<
    * Sync all subscriptions from Stripe to Convex
    * This is useful when migrating from another system or backfilling data
    */
-  async syncSubscriptions(ctx: RunActionCtx) {
-    let hasMore = true;
-    let startingAfter: string | undefined;
-
-    while (hasMore) {
-      const subscriptions = await this.stripe.subscriptions.list({
-        limit: 100,
-        starting_after: startingAfter,
-      });
-
-      for (const subscription of subscriptions.data) {
-        // Get the customer from Convex
-        const customer = await ctx.runQuery(
-          this.component.lib.getCustomerByStripeId,
-          { stripeId: subscription.customer as string }
-        );
-
-        if (!customer) {
-          // Skip subscriptions for customers not in our system
-          continue;
-        }
-
-        // Get the price from Convex
-        const price = subscription.items.data[0]?.price;
-        if (!price) {
-          continue;
-        }
-
-        const priceDoc = await ctx.runQuery(
-          this.component.lib.getPriceByStripeId,
-          { stripeId: price.id }
-        );
-
-        // Find product slug if this is a configured product
-        const productSlug =
-          priceDoc?.slug?.split("-")[0] ?? // Extract slug from price slug (e.g., "premium" from "premium-usd-month")
-          undefined;
-
-        // Extract period fields using utility function
-        const { currentPeriodStart, currentPeriodEnd } =
-          extractSubscriptionPeriod(subscription);
-
-        // Upsert subscription
-        await ctx.runMutation(this.component.lib.upsertSubscription, {
-          stripeId: subscription.id,
-          customerId: customer._id,
-          customerStripeId: subscription.customer as string,
-          userId: customer.userId,
-          status: subscription.status,
-          priceId: priceDoc?._id,
-          priceStripeId: price.id,
-          productSlug,
-          currency: subscription.currency,
-          currentPeriodStart,
-          currentPeriodEnd,
-          cancelAtPeriodEnd: subscription.cancel_at_period_end,
-          canceledAt: subscription.canceled_at || undefined,
-          endedAt: subscription.ended_at || undefined,
-          trialStart: subscription.trial_start || undefined,
-          trialEnd: subscription.trial_end || undefined,
-          created: subscription.created,
-          metadata: extractMetadata(subscription.metadata),
-        });
-      }
-
-      hasMore = subscriptions.has_more;
-      if (hasMore && subscriptions.data.length > 0) {
-        startingAfter = subscriptions.data[subscriptions.data.length - 1]?.id;
-      }
-    }
+  async syncSubscriptions(
+    ctx: RunActionCtx,
+    { stripeSecretKey }: { stripeSecretKey: string }
+  ) {
+    await ctx.runAction(this.component.lib.syncSubscriptions, {
+      stripeSecretKey,
+    });
   }
 }

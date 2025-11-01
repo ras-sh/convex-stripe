@@ -8,8 +8,8 @@
  * @module
  */
 
-import type * as admin from "../admin.js";
 import type * as auth from "../auth.js";
+import type * as example from "../example.js";
 import type * as http from "../http.js";
 import type * as stripe from "../stripe.js";
 
@@ -28,8 +28,8 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  admin: typeof admin;
   auth: typeof auth;
+  example: typeof example;
   http: typeof http;
   stripe: typeof stripe;
 }>;
@@ -136,6 +136,36 @@ export declare const components: {
         "query",
         "internal",
         { userId: string },
+        any
+      >;
+      syncAll: FunctionReference<
+        "action",
+        "internal",
+        { stripeSecretKey: string },
+        any
+      >;
+      syncCustomers: FunctionReference<
+        "action",
+        "internal",
+        { stripeSecretKey: string },
+        any
+      >;
+      syncInvoices: FunctionReference<
+        "action",
+        "internal",
+        { stripeSecretKey: string },
+        any
+      >;
+      syncProducts: FunctionReference<
+        "action",
+        "internal",
+        { stripeSecretKey: string },
+        any
+      >;
+      syncSubscriptions: FunctionReference<
+        "action",
+        "internal",
+        { stripeSecretKey: string },
         any
       >;
       upsertCustomer: FunctionReference<

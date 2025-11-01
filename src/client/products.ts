@@ -1,4 +1,3 @@
-import type Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
 import type { RunActionCtx, RunQueryCtx, UseApi } from "../component/util.js";
 import type { ProductConfig } from "./types.js";
@@ -8,16 +7,10 @@ import type { ProductConfig } from "./types.js";
  */
 export class ProductMethods<Products extends Record<string, ProductConfig>> {
   private readonly component: UseApi<typeof api>;
-  private readonly stripe: Stripe;
   private readonly products: Products;
 
-  constructor(
-    component: UseApi<typeof api>,
-    stripe: Stripe,
-    products: Products
-  ) {
+  constructor(component: UseApi<typeof api>, products: Products) {
     this.component = component;
-    this.stripe = stripe;
     this.products = products;
   }
 
@@ -78,66 +71,12 @@ export class ProductMethods<Products extends Record<string, ProductConfig>> {
    * Sync products and prices from Stripe to Convex
    * Call this once after setting up the component to populate your product catalog
    */
-  async syncProducts(ctx: RunActionCtx) {
-    const products = await this.stripe.products.list({
-      active: true,
-      limit: 100,
+  async syncProducts(
+    ctx: RunActionCtx,
+    { stripeSecretKey }: { stripeSecretKey: string }
+  ) {
+    await ctx.runAction(this.component.lib.syncProducts, {
+      stripeSecretKey,
     });
-
-    for (const product of products.data) {
-      // Find slug if this product is in the configured products
-      const slug = Object.keys(this.products).find(
-        (key) => this.products[key as keyof Products]?.productId === product.id
-      );
-
-      // Upsert product
-      const productId = await ctx.runMutation(
-        this.component.lib.upsertProduct,
-        {
-          stripeId: product.id,
-          name: product.name,
-          description: product.description || undefined,
-          active: product.active,
-          type: product.type || undefined,
-          slug,
-          created: product.created,
-          updated: product.updated,
-          metadata: product.metadata,
-        }
-      );
-
-      if (!productId) {
-        continue;
-      }
-
-      // Fetch and upsert prices for this product
-      const prices = await this.stripe.prices.list({
-        product: product.id,
-        limit: 100,
-      });
-
-      for (const price of prices.data) {
-        // Generate price slug if we have a product slug
-        const priceSlug = slug
-          ? `${slug}-${price.currency}-${price.recurring?.interval || "once"}`
-          : undefined;
-
-        await ctx.runMutation(this.component.lib.upsertPrice, {
-          stripeId: price.id,
-          productId,
-          productStripeId: product.id,
-          active: price.active,
-          currency: price.currency,
-          unitAmount: price.unit_amount || undefined,
-          billingScheme: price.billing_scheme || undefined,
-          type: price.type,
-          recurringInterval: price.recurring?.interval || undefined,
-          recurringIntervalCount: price.recurring?.interval_count || undefined,
-          slug: priceSlug,
-          created: price.created,
-          metadata: price.metadata,
-        });
-      }
-    }
   }
 }

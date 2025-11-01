@@ -1,4 +1,9 @@
-import { actionGeneric, type HttpRouter, queryGeneric } from "convex/server";
+import {
+  actionGeneric,
+  type HttpRouter,
+  internalActionGeneric,
+  queryGeneric,
+} from "convex/server";
 import type Stripe from "stripe";
 import type { ComponentApi } from "../component/util.js";
 import {
@@ -52,6 +57,7 @@ export class StripeComponent<
   readonly products: Products;
   readonly component: ComponentApi;
   private readonly config: StripeConfig<Products>;
+  private readonly stripeSecretKey: string;
   private readonly webhookSecret: string;
 
   // Method groups
@@ -65,16 +71,13 @@ export class StripeComponent<
     this.component = component;
     this.config = config;
     this.products = config.products ?? ({} as Products);
+    this.stripeSecretKey = config.stripeSecretKey;
     this.webhookSecret = config.webhookSecret;
     this.stripe = config.stripe;
 
     // Initialize method groups
     this.customerMethods = new CustomerMethods(this.component, this.stripe);
-    this.productMethods = new ProductMethods(
-      this.component,
-      this.stripe,
-      this.products
-    );
+    this.productMethods = new ProductMethods(this.component, this.products);
     this.subscriptionMethods = new SubscriptionMethods(
       this.component,
       this.stripe,
@@ -82,7 +85,7 @@ export class StripeComponent<
       this.customerMethods.getCustomerByUserId.bind(this.customerMethods),
       this.customerMethods.createCustomer.bind(this.customerMethods)
     );
-    this.invoiceMethods = new InvoiceMethods(this.component, this.stripe);
+    this.invoiceMethods = new InvoiceMethods(this.component);
     this.webhookHandler = new WebhookHandler(
       this.component,
       this.stripe,
@@ -135,14 +138,18 @@ export class StripeComponent<
     return this.productMethods.getPriceBySlug(...args);
   }
 
-  syncProducts(...args: Parameters<ProductMethods<Products>["syncProducts"]>) {
-    return this.productMethods.syncProducts(...args);
+  syncProducts(ctx: Parameters<ProductMethods<Products>["syncProducts"]>[0]) {
+    return this.productMethods.syncProducts(ctx, {
+      stripeSecretKey: this.stripeSecretKey,
+    });
   }
 
   // ===== CUSTOMER SYNC METHODS =====
 
-  syncCustomers(...args: Parameters<CustomerMethods["syncCustomers"]>) {
-    return this.customerMethods.syncCustomers(...args);
+  syncCustomers(ctx: Parameters<CustomerMethods["syncCustomers"]>[0]) {
+    return this.customerMethods.syncCustomers(ctx, {
+      stripeSecretKey: this.stripeSecretKey,
+    });
   }
 
   // ===== SUBSCRIPTION METHODS =====
@@ -180,9 +187,11 @@ export class StripeComponent<
   }
 
   syncSubscriptions(
-    ...args: Parameters<SubscriptionMethods<Products>["syncSubscriptions"]>
+    ctx: Parameters<SubscriptionMethods<Products>["syncSubscriptions"]>[0]
   ) {
-    return this.subscriptionMethods.syncSubscriptions(...args);
+    return this.subscriptionMethods.syncSubscriptions(ctx, {
+      stripeSecretKey: this.stripeSecretKey,
+    });
   }
 
   // ===== INVOICE METHODS =====
@@ -191,8 +200,10 @@ export class StripeComponent<
     return this.invoiceMethods.listUserInvoices(...args);
   }
 
-  syncInvoices(...args: Parameters<InvoiceMethods["syncInvoices"]>) {
-    return this.invoiceMethods.syncInvoices(...args);
+  syncInvoices(ctx: Parameters<InvoiceMethods["syncInvoices"]>[0]) {
+    return this.invoiceMethods.syncInvoices(ctx, {
+      stripeSecretKey: this.stripeSecretKey,
+    });
   }
 
   // ===== SYNC ALL METHOD =====
@@ -203,24 +214,34 @@ export class StripeComponent<
    * Useful when migrating from another Stripe integration
    */
   async syncAll(ctx: Parameters<typeof this.syncProducts>[0]) {
-    // Sync in order of dependencies:
-    // 1. Products & Prices (no dependencies)
-    await this.syncProducts(ctx);
-
-    // 2. Customers (depends on nothing)
-    await this.syncCustomers(ctx);
-
-    // 3. Subscriptions (depends on customers and prices)
-    await this.syncSubscriptions(ctx);
-
-    // 4. Invoices (depends on customers and subscriptions)
-    await this.syncInvoices(ctx);
+    await ctx.runAction(this.component.lib.syncAll, {
+      stripeSecretKey: this.stripeSecretKey,
+    });
   }
 
   // ===== PUBLIC API =====
 
   /**
    * Returns the public API that can be called from the frontend
+   * Sync functions are internal and can only be called from backend code
+   *
+   * Usage:
+   * ```ts
+   * export const {
+   *   getCurrentSubscription,
+   *   listUserSubscriptions,
+   *   getConfiguredProducts,
+   *   listUserInvoices,
+   *   generateCheckoutLink,
+   *   generateBillingPortalLink,
+   *   cancelSubscription,
+   *   syncAll,
+   *   syncProducts,
+   *   syncCustomers,
+   *   syncSubscriptions,
+   *   syncInvoices,
+   * } = stripe.api();
+   * ```
    */
   api() {
     return {
@@ -281,6 +302,27 @@ export class StripeComponent<
           await this.cancelSubscription(ctx, {
             immediate: args.immediate,
           }),
+      }),
+
+      // Internal Actions (Sync)
+      syncAll: internalActionGeneric({
+        handler: (ctx, _args) => this.syncAll(ctx),
+      }),
+
+      syncProducts: internalActionGeneric({
+        handler: (ctx, _args) => this.syncProducts(ctx),
+      }),
+
+      syncCustomers: internalActionGeneric({
+        handler: (ctx, _args) => this.syncCustomers(ctx),
+      }),
+
+      syncSubscriptions: internalActionGeneric({
+        handler: (ctx, _args) => this.syncSubscriptions(ctx),
+      }),
+
+      syncInvoices: internalActionGeneric({
+        handler: (ctx, _args) => this.syncInvoices(ctx),
       }),
     };
   }

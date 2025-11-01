@@ -69,45 +69,12 @@ export class CustomerMethods {
    * Sync all customers from Stripe to Convex
    * This is useful when migrating from another system or backfilling data
    */
-  async syncCustomers(ctx: RunActionCtx) {
-    let hasMore = true;
-    let startingAfter: string | undefined;
-
-    while (hasMore) {
-      const customers = await this.stripe.customers.list({
-        limit: 100,
-        starting_after: startingAfter,
-      });
-
-      for (const customer of customers.data) {
-        // Skip deleted customers
-        if (customer.deleted) {
-          continue;
-        }
-
-        // Extract userId from metadata if it exists
-        const userId = customer.metadata?.userId;
-        if (!userId) {
-          // Skip customers without userId - they might be created outside the app
-          continue;
-        }
-
-        // Upsert customer
-        await ctx.runMutation(this.component.lib.upsertCustomer, {
-          stripeId: customer.id,
-          userId,
-          email: customer.email || "",
-          name: customer.name || undefined,
-          currency: customer.currency || undefined,
-          created: customer.created,
-          metadata: customer.metadata,
-        });
-      }
-
-      hasMore = customers.has_more;
-      if (hasMore && customers.data.length > 0) {
-        startingAfter = customers.data[customers.data.length - 1]?.id;
-      }
-    }
+  async syncCustomers(
+    ctx: RunActionCtx,
+    { stripeSecretKey }: { stripeSecretKey: string }
+  ) {
+    await ctx.runAction(this.component.lib.syncCustomers, {
+      stripeSecretKey,
+    });
   }
 }
