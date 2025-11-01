@@ -58,8 +58,9 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc --project ./tsconfig.build.json && pnpm copy:dts",
+    "build": "tsc --project ./tsconfig.build.json && pnpm copy:dts && pnpm copy:generated",
     "copy:dts": "rsync -a --include='*/' --include='*.d.ts' --exclude='*' src/ dist/ || cpy 'src/**/*.d.ts' 'dist/' --parents",
+    "copy:generated": "rsync -a --include='*/' --include='_generated/***' --exclude='*' src/ dist/ || cpy 'src/**/_generated/**' 'dist/' --parents",
     "build:watch": "npx chokidar 'tsconfig*.json' 'src/**/*.ts' -i '**/*.test.ts' -c 'pnpm build' --initial",
     "dev:backend": "convex dev --live-component-sources --typecheck-components",
     "clean": "rm -rf dist *.tsbuildinfo node_modules/.cache",

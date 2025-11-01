@@ -1,5 +1,5 @@
 import type { api } from "../component/_generated/api.js";
-import type { RunQueryCtx, UseApi } from "../shared.js";
+import type { RunQueryCtx, UseApi } from "../component/util.js";
 
 /**
  * Invoice-related methods for the Stripe component

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { api } from "../component/_generated/api.js";
-import type { UseApi } from "../shared.js";
+import type { UseApi } from "../component/util.js";
 import { StripeComponent } from "./index.js";
 
 describe("StripeComponent", () => {

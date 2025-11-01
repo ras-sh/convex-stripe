@@ -1,7 +1,6 @@
 import { actionGeneric, type HttpRouter, queryGeneric } from "convex/server";
 import type Stripe from "stripe";
-import type { api } from "../component/_generated/api.js";
-import type { UseApi } from "../shared.js";
+import type { ComponentApi } from "../component/util.js";
 import {
   vCancelSubscriptionArgs,
   vGenerateBillingPortalLinkArgs,
@@ -51,7 +50,7 @@ export class StripeComponent<
 > {
   readonly stripe: Stripe;
   readonly products: Products;
-  readonly component: UseApi<typeof api>;
+  readonly component: ComponentApi;
   private readonly config: StripeConfig<Products>;
   private readonly webhookSecret: string;
 
@@ -62,7 +61,7 @@ export class StripeComponent<
   private readonly invoiceMethods: InvoiceMethods;
   private readonly webhookHandler: WebhookHandler<Products>;
 
-  constructor(component: UseApi<typeof api>, config: StripeConfig<Products>) {
+  constructor(component: ComponentApi, config: StripeConfig<Products>) {
     this.component = component;
     this.config = config;
     this.products = config.products ?? ({} as Products);

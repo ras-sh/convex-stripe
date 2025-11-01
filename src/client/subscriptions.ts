@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 import type { api } from "../component/_generated/api.js";
-import type { RunActionCtx, RunQueryCtx, UseApi } from "../shared.js";
+import type { RunActionCtx, RunQueryCtx, UseApi } from "../component/util.js";
 import type { StripeCustomer } from "../validators.js";
 import type { ProductConfig, StripeConfig } from "./types.js";
 

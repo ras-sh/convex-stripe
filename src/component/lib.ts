@@ -11,7 +11,7 @@ import {
   vUpsertSubscriptionArgs,
   vUserId,
 } from "../validators.js";
-import { internalMutation, internalQuery, query } from "./_generated/server.js";
+import { mutation, query } from "./_generated/server.js";
 
 // ===== QUERIES =====
 
@@ -30,7 +30,7 @@ export const getCustomerByUserId = query({
 /**
  * Get a customer by Stripe ID
  */
-export const getCustomerByStripeId = internalQuery({
+export const getCustomerByStripeId = query({
   args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
@@ -66,7 +66,7 @@ export const getProductBySlug = query({
 /**
  * Get a product by Stripe ID
  */
-export const getProductByStripeId = internalQuery({
+export const getProductByStripeId = query({
   args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
@@ -102,7 +102,7 @@ export const getPriceBySlug = query({
 /**
  * Get a price by Stripe ID
  */
-export const getPriceByStripeId = internalQuery({
+export const getPriceByStripeId = query({
   args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
@@ -144,7 +144,7 @@ export const listUserSubscriptions = query({
 /**
  * Get a subscription by Stripe ID
  */
-export const getSubscriptionByStripeId = internalQuery({
+export const getSubscriptionByStripeId = query({
   args: { stripeId: vStripeId },
   handler: async (ctx, args) =>
     await ctx.db
@@ -175,12 +175,12 @@ export const listUserInvoices = query({
   },
 });
 
-// ===== INTERNAL MUTATIONS =====
+// ===== MUTATIONS =====
 
 /**
  * Create or update a customer
  */
-export const upsertCustomer = internalMutation({
+export const upsertCustomer = mutation({
   args: vUpsertCustomerArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -205,7 +205,7 @@ export const upsertCustomer = internalMutation({
 /**
  * Create or update a product
  */
-export const upsertProduct = internalMutation({
+export const upsertProduct = mutation({
   args: vUpsertProductArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -233,7 +233,7 @@ export const upsertProduct = internalMutation({
 /**
  * Create or update a price
  */
-export const upsertPrice = internalMutation({
+export const upsertPrice = mutation({
   args: vUpsertPriceArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -265,7 +265,7 @@ export const upsertPrice = internalMutation({
 /**
  * Create or update a subscription
  */
-export const upsertSubscription = internalMutation({
+export const upsertSubscription = mutation({
   args: vUpsertSubscriptionArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -299,7 +299,7 @@ export const upsertSubscription = internalMutation({
 /**
  * Delete a subscription
  */
-export const deleteSubscription = internalMutation({
+export const deleteSubscription = mutation({
   args: vDeleteSubscriptionArgs.fields,
   handler: async (ctx, args) => {
     const subscription = await ctx.db
@@ -316,7 +316,7 @@ export const deleteSubscription = internalMutation({
 /**
  * Create or update an invoice
  */
-export const upsertInvoice = internalMutation({
+export const upsertInvoice = mutation({
   args: vUpsertInvoiceArgs.fields,
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -344,7 +344,7 @@ export const upsertInvoice = internalMutation({
 /**
  * Delete a customer by Stripe ID
  */
-export const deleteCustomer = internalMutation({
+export const deleteCustomer = mutation({
   args: vDeleteCustomerArgs.fields,
   handler: async (ctx, args) => {
     const customer = await ctx.db
@@ -360,7 +360,7 @@ export const deleteCustomer = internalMutation({
 /**
  * Deactivate a product (set active=false) by Stripe ID
  */
-export const deactivateProduct = internalMutation({
+export const deactivateProduct = mutation({
   args: v.object({ stripeId: vStripeId }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -376,7 +376,7 @@ export const deactivateProduct = internalMutation({
 /**
  * Deactivate a price (set active=false) by Stripe ID
  */
-export const deactivatePrice = internalMutation({
+export const deactivatePrice = mutation({
   args: v.object({ stripeId: vStripeId }),
   handler: async (ctx, args) => {
     const existing = await ctx.db

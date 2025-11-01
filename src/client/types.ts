@@ -1,5 +1,5 @@
 import type Stripe from "stripe";
-import type { RunActionCtx, RunQueryCtx } from "../shared.js";
+import type { RunActionCtx, RunQueryCtx } from "../component/util.js";
 
 /**
  * Configuration for a single product

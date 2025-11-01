@@ -1,0 +1,19 @@
+{
+  "name": "uses-component",
+  "private": true,
+  "type": "module",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "convex dev --typecheck-components",
+    "logs": "convex logs"
+  },
+  "dependencies": {
+    "@ras-sh/convex-stripe": "file:..",
+    "convex": "^1.28.0",
+    "convex-helpers": "^0.1.104",
+    "stripe": "^19.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0"
+  }
+}

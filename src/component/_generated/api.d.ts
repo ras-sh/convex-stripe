@@ -30,28 +30,29 @@ declare const fullApi: ApiFromModules<{
 export type Mounts = {
   lib: {
     // Queries
-    getCustomerByUserId: FunctionReference<"query", "internal", { userId: string }, any>;
-    getCustomerByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
-    listActiveProducts: FunctionReference<"query", "internal", Record<string, never>, any>;
-    getProductBySlug: FunctionReference<"query", "internal", { slug: string }, any>;
-    getProductByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
-    getPricesForProduct: FunctionReference<"query", "internal", { productId: string }, any>;
-    getPriceBySlug: FunctionReference<"query", "internal", { slug: string }, any>;
-    getPriceByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
-    getCurrentSubscription: FunctionReference<"query", "internal", { userId: string }, any>;
-    listUserSubscriptions: FunctionReference<"query", "internal", { userId: string }, any>;
-    getSubscriptionByStripeId: FunctionReference<"query", "internal", { stripeId: string }, any>;
-    listUserInvoices: FunctionReference<"query", "internal", { userId: string; limit?: number }, any>;
+    getCustomerByUserId: FunctionReference<"query", "public", { userId: string }, any>;
+    getCustomerByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    listActiveProducts: FunctionReference<"query", "public", Record<string, never>, any>;
+    getProductBySlug: FunctionReference<"query", "public", { slug: string }, any>;
+    getProductByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getPricesForProduct: FunctionReference<"query", "public", { productId: string }, any>;
+    getPriceBySlug: FunctionReference<"query", "public", { slug: string }, any>;
+    getPriceByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getCurrentSubscription: FunctionReference<"query", "public", { userId: string }, any>;
+    listUserSubscriptions: FunctionReference<"query", "public", { userId: string }, any>;
+    getSubscriptionByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    listUserInvoices: FunctionReference<"query", "public", { userId: string; limit?: number }, any>;
 
     // Mutations
-    upsertCustomer: FunctionReference<"mutation", "internal", any, string>;
-    upsertProduct: FunctionReference<"mutation", "internal", any, string>;
-    upsertPrice: FunctionReference<"mutation", "internal", any, string>;
-    upsertSubscription: FunctionReference<"mutation", "internal", any, string>;
-    deleteSubscription: FunctionReference<"mutation", "internal", { stripeId: string }, void>;
-    upsertInvoice: FunctionReference<"mutation", "internal", any, string>;
-    upsertPaymentMethod: FunctionReference<"mutation", "internal", any, string>;
-    deletePaymentMethod: FunctionReference<"mutation", "internal", { stripeId: string }, void>;
+    upsertCustomer: FunctionReference<"mutation", "public", any, string>;
+    upsertProduct: FunctionReference<"mutation", "public", any, string>;
+    upsertPrice: FunctionReference<"mutation", "public", any, string>;
+    upsertSubscription: FunctionReference<"mutation", "public", any, string>;
+    deleteSubscription: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+    upsertInvoice: FunctionReference<"mutation", "public", any, string>;
+    deleteCustomer: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+    deactivateProduct: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+    deactivatePrice: FunctionReference<"mutation", "public", { stripeId: string }, void>;
   };
 };
 // For now fullApiWithMounts is only fullApi which provides

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "strict": true,
+    "skipLibCheck": true,
+
+    "target": "ESNext",
+    "lib": ["ES2021", "dom", "ESNext.Array", "DOM.Iterable"],
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    "customConditions": ["@convex-dev/component-source"]
+  },
+  "include": ["./**/*"],
+  "exclude": ["./_generated"]
+}

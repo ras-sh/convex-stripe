@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
-import { type api, internal } from "../component/_generated/api.js";
-import type { RunActionCtx, RunQueryCtx, UseApi } from "../shared.js";
+import type { api } from "../component/_generated/api.js";
+import type { RunActionCtx, RunQueryCtx, UseApi } from "../component/util.js";
 import type { ProductConfig } from "./types.js";
 
 /**
@@ -91,17 +91,20 @@ export class ProductMethods<Products extends Record<string, ProductConfig>> {
       );
 
       // Upsert product
-      const productId = await ctx.runMutation(internal.lib.upsertProduct, {
-        stripeId: product.id,
-        name: product.name,
-        description: product.description || undefined,
-        active: product.active,
-        type: product.type || undefined,
-        slug,
-        created: product.created,
-        updated: product.updated,
-        metadata: product.metadata,
-      });
+      const productId = await ctx.runMutation(
+        this.component.lib.upsertProduct,
+        {
+          stripeId: product.id,
+          name: product.name,
+          description: product.description || undefined,
+          active: product.active,
+          type: product.type || undefined,
+          slug,
+          created: product.created,
+          updated: product.updated,
+          metadata: product.metadata,
+        }
+      );
 
       if (!productId) {
         continue;
@@ -119,7 +122,7 @@ export class ProductMethods<Products extends Record<string, ProductConfig>> {
           ? `${slug}-${price.currency}-${price.recurring?.interval || "once"}`
           : undefined;
 
-        await ctx.runMutation(internal.lib.upsertPrice, {
+        await ctx.runMutation(this.component.lib.upsertPrice, {
           stripeId: price.id,
           productId,
           productStripeId: product.id,

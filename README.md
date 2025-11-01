@@ -30,7 +30,7 @@ import { defineApp } from "convex/server";
 import stripe from "@ras-sh/convex-stripe/convex.config";
 
 const app = defineApp();
-app.use(stripe, { name: "stripe" });
+app.use(stripe);
 
 export default app;
 ```

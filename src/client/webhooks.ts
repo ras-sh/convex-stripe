@@ -1,25 +1,27 @@
 import type { HttpRouter } from "convex/server";
 import { httpActionGeneric } from "convex/server";
 import type Stripe from "stripe";
-import { type api, internal } from "../component/_generated/api.js";
+import type { api } from "../component/_generated/api.js";
 import type { Id } from "../component/_generated/dataModel.js";
-import type { RunActionCtx, UseApi } from "../shared.js";
+import type { RunActionCtx, UseApi } from "../component/util.js";
 import type { ProductConfig, WebhookConfig } from "./types.js";
 
 /**
  * Webhook handling for the Stripe component
  */
 export class WebhookHandler<Products extends Record<string, ProductConfig>> {
+  private readonly component: UseApi<typeof api>;
   private readonly stripe: Stripe;
   private readonly webhookSecret: string;
   private readonly products: Products;
 
   constructor(
-    _component: UseApi<typeof api>,
+    component: UseApi<typeof api>,
     stripe: Stripe,
     webhookSecret: string,
     products: Products
   ) {
+    this.component = component;
     this.stripe = stripe;
     this.webhookSecret = webhookSecret;
     this.products = products;
@@ -191,9 +193,12 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
         ? subscription.customer
         : subscription.customer.id;
 
-    const customer = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
-      stripeId: customerStripeId,
-    });
+    const customer = await ctx.runQuery(
+      this.component.lib.getCustomerByStripeId,
+      {
+        stripeId: customerStripeId,
+      }
+    );
 
     if (!customer) {
       console.error("Customer not found for subscription:", subscription.id);
@@ -207,10 +212,10 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     let currency: string | undefined;
 
     if (priceStripeId) {
-      const price = await ctx.runQuery(internal.lib.getPriceByStripeId, {
+      const price = await ctx.runQuery(this.component.lib.getPriceByStripeId, {
         stripeId: priceStripeId,
       });
-      priceId = price?._id;
+      priceId = price?._id as Id<"prices"> | undefined;
       productSlug = price?.slug;
       currency = price?.currency;
     }
@@ -220,7 +225,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const currentPeriodEnd = 0;
     // Price currency already derived above when possible
 
-    await ctx.runMutation(internal.lib.upsertSubscription, {
+    await ctx.runMutation(this.component.lib.upsertSubscription, {
       stripeId: subscription.id,
       customerId: customer._id,
       customerStripeId,
@@ -249,7 +254,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     event: Stripe.CustomerSubscriptionDeletedEvent
   ) {
     const subscription = event.data.object;
-    await ctx.runMutation(internal.lib.deleteSubscription, {
+    await ctx.runMutation(this.component.lib.deleteSubscription, {
       stripeId: subscription.id,
     });
   }
@@ -267,9 +272,12 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
         ? invoice.customer
         : invoice.customer?.id || "";
 
-    const customer = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
-      stripeId: customerStripeId,
-    });
+    const customer = await ctx.runQuery(
+      this.component.lib.getCustomerByStripeId,
+      {
+        stripeId: customerStripeId,
+      }
+    );
 
     if (!customer) {
       console.error("Customer not found for invoice:", invoice.id);
@@ -282,7 +290,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     // Link to subscription only if available via typed fields (not available in current types)
     // Leave subscriptionId undefined in this handler to respect SDK typings
 
-    await ctx.runMutation(internal.lib.upsertInvoice, {
+    await ctx.runMutation(this.component.lib.upsertInvoice, {
       stripeId: invoice.id,
       customerId: customer._id,
       customerStripeId,
@@ -318,7 +326,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       (key) => this.products[key as keyof Products]?.productId === product.id
     );
 
-    await ctx.runMutation(internal.lib.upsertProduct, {
+    await ctx.runMutation(this.component.lib.upsertProduct, {
       stripeId: product.id,
       name: product.name,
       description: product.description || undefined,
@@ -336,7 +344,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     event: Stripe.ProductDeletedEvent
   ) {
     const product = event.data.object;
-    await ctx.runMutation(internal.lib.deactivateProduct, {
+    await ctx.runMutation(this.component.lib.deactivateProduct, {
       stripeId: product.id,
     });
   }
@@ -349,9 +357,12 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const productStripeId =
       typeof price.product === "string" ? price.product : price.product.id;
 
-    const product = await ctx.runQuery(internal.lib.getProductByStripeId, {
-      stripeId: productStripeId,
-    });
+    const product = await ctx.runQuery(
+      this.component.lib.getProductByStripeId,
+      {
+        stripeId: productStripeId,
+      }
+    );
 
     if (!product) {
       console.error("Product not found for price:", price.id);
@@ -362,7 +373,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       ? `${product.slug}-${price.currency}-${price.recurring?.interval || "once"}`
       : undefined;
 
-    await ctx.runMutation(internal.lib.upsertPrice, {
+    await ctx.runMutation(this.component.lib.upsertPrice, {
       stripeId: price.id,
       productId: product._id,
       productStripeId,
@@ -384,7 +395,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     event: Stripe.PriceDeletedEvent
   ) {
     const price = event.data.object;
-    await ctx.runMutation(internal.lib.deactivatePrice, {
+    await ctx.runMutation(this.component.lib.deactivatePrice, {
       stripeId: price.id,
     });
   }
@@ -399,15 +410,18 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     if (c.metadata && typeof c.metadata.userId === "string") {
       userId = c.metadata.userId;
     } else {
-      const existing = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
-        stripeId: c.id,
-      });
+      const existing = await ctx.runQuery(
+        this.component.lib.getCustomerByStripeId,
+        {
+          stripeId: c.id,
+        }
+      );
       userId = existing?.userId;
     }
     if (!userId) {
       return;
     }
-    await ctx.runMutation(internal.lib.upsertCustomer, {
+    await ctx.runMutation(this.component.lib.upsertCustomer, {
       stripeId: c.id,
       userId,
       email: c.email || "",
@@ -423,7 +437,9 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     event: Stripe.CustomerDeletedEvent
   ) {
     const c = event.data.object;
-    await ctx.runMutation(internal.lib.deleteCustomer, { stripeId: c.id });
+    await ctx.runMutation(this.component.lib.deleteCustomer, {
+      stripeId: c.id,
+    });
   }
 
   private async handlePaymentIntentEvent(
@@ -438,14 +454,17 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     if (!customerStripeId) {
       return;
     }
-    const customer = await ctx.runQuery(internal.lib.getCustomerByStripeId, {
-      stripeId: customerStripeId,
-    });
+    const customer = await ctx.runQuery(
+      this.component.lib.getCustomerByStripeId,
+      {
+        stripeId: customerStripeId,
+      }
+    );
     if (!customer) {
       return;
     }
 
-    await ctx.runMutation(internal.lib.upsertInvoice, {
+    await ctx.runMutation(this.component.lib.upsertInvoice, {
       // Use PaymentIntent id to record purchase in invoices store
       stripeId: pi.id,
       customerId: customer._id,
