@@ -31,16 +31,16 @@ export type Mounts = {
   lib: {
     // Queries
     getCustomerByUserId: FunctionReference<"query", "public", { userId: string }, any>;
-    getCustomerByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getCustomerByStripeId: FunctionReference<"query", "public", { stripeCustomerId: string }, any>;
     listActiveProducts: FunctionReference<"query", "public", Record<string, never>, any>;
     getProductBySlug: FunctionReference<"query", "public", { slug: string }, any>;
-    getProductByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getProductByStripeId: FunctionReference<"query", "public", { stripeProductId: string }, any>;
     getPricesForProduct: FunctionReference<"query", "public", { productId: string }, any>;
     getPriceBySlug: FunctionReference<"query", "public", { slug: string }, any>;
-    getPriceByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getPriceByStripeId: FunctionReference<"query", "public", { stripePriceId: string }, any>;
     getCurrentSubscription: FunctionReference<"query", "public", { userId: string }, any>;
     listUserSubscriptions: FunctionReference<"query", "public", { userId: string }, any>;
-    getSubscriptionByStripeId: FunctionReference<"query", "public", { stripeId: string }, any>;
+    getSubscriptionByStripeId: FunctionReference<"query", "public", { stripeSubscriptionId: string }, any>;
     listUserInvoices: FunctionReference<"query", "public", { userId: string; limit?: number }, any>;
 
     // Mutations
@@ -48,11 +48,11 @@ export type Mounts = {
     upsertProduct: FunctionReference<"mutation", "public", any, any>;
     upsertPrice: FunctionReference<"mutation", "public", any, any>;
     upsertSubscription: FunctionReference<"mutation", "public", any, any>;
-    deleteSubscription: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+    deleteSubscription: FunctionReference<"mutation", "public", { stripeSubscriptionId: string }, void>;
     upsertInvoice: FunctionReference<"mutation", "public", any, any>;
-    deleteCustomer: FunctionReference<"mutation", "public", { stripeId: string }, void>;
-    deactivateProduct: FunctionReference<"mutation", "public", { stripeId: string }, void>;
-    deactivatePrice: FunctionReference<"mutation", "public", { stripeId: string }, void>;
+    deleteCustomer: FunctionReference<"mutation", "public", { stripeCustomerId: string }, void>;
+    deactivateProduct: FunctionReference<"mutation", "public", { stripeProductId: string }, void>;
+    deactivatePrice: FunctionReference<"mutation", "public", { stripePriceId: string }, void>;
 
     // Actions (Sync)
     syncProducts: FunctionReference<"action", "public", { stripeSecretKey: string }, any>;

@@ -32,7 +32,9 @@ export class ProductMethods<Products extends Record<string, ProductConfig>> {
     const result: Record<string, Product> = {};
 
     for (const [slug, config] of Object.entries(this.products)) {
-      const product = allProducts.find((p) => p.stripeId === config.productId);
+      const product = allProducts.find(
+        (p) => p.stripeProductId === config.productId
+      );
       if (product) {
         result[slug] = product;
       }

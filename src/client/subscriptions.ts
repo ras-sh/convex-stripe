@@ -109,7 +109,7 @@ export class SubscriptionMethods<
 
     // Create checkout session
     const session = await this.stripe.checkout.sessions.create({
-      customer: customer.stripeId,
+      customer: customer.stripeCustomerId,
       mode,
       line_items: priceIds.map((priceId) => ({
         price: priceId,
@@ -140,7 +140,7 @@ export class SubscriptionMethods<
     }
 
     const session = await this.stripe.billingPortal.sessions.create({
-      customer: customer.stripeId,
+      customer: customer.stripeCustomerId,
       return_url: returnUrl,
     });
 
@@ -163,12 +163,15 @@ export class SubscriptionMethods<
 
     if (immediate) {
       // Cancel immediately
-      await this.stripe.subscriptions.cancel(subscription.stripeId);
+      await this.stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
     } else {
       // Cancel at period end
-      await this.stripe.subscriptions.update(subscription.stripeId, {
-        cancel_at_period_end: true,
-      });
+      await this.stripe.subscriptions.update(
+        subscription.stripeSubscriptionId,
+        {
+          cancel_at_period_end: true,
+        }
+      );
     }
   }
 

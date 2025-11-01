@@ -19,7 +19,7 @@ export const schema = defineSchema({
    */
   customers: defineTable({
     // Stripe customer ID
-    stripeId: v.string(),
+    stripeCustomerId: v.string(),
     // App's user ID (from your users table)
     userId: v.string(),
     // Customer email
@@ -33,7 +33,7 @@ export const schema = defineSchema({
     // Custom metadata (Stripe.Metadata is Record<string, string>)
     metadata: v.optional(v.record(v.string(), v.string())),
   })
-    .index("stripeId", ["stripeId"])
+    .index("stripeCustomerId", ["stripeCustomerId"])
     .index("userId", ["userId"]),
 
   /**
@@ -42,7 +42,7 @@ export const schema = defineSchema({
    */
   products: defineTable({
     // Stripe product ID
-    stripeId: v.string(),
+    stripeProductId: v.string(),
     // Product name
     name: v.string(),
     // Product description
@@ -59,7 +59,7 @@ export const schema = defineSchema({
     // Custom metadata (Stripe.Metadata is Record<string, string>)
     metadata: v.optional(v.record(v.string(), v.string())),
   })
-    .index("stripeId", ["stripeId"])
+    .index("stripeProductId", ["stripeProductId"])
     .index("slug", ["slug"])
     .index("active", ["active"]),
 
@@ -69,11 +69,11 @@ export const schema = defineSchema({
    */
   prices: defineTable({
     // Stripe price ID
-    stripeId: v.string(),
+    stripePriceId: v.string(),
     // Associated product ID (references products table)
     productId: v.id("products"),
     // Stripe product ID for reference
-    productStripeId: v.string(),
+    stripeProductId: v.string(),
     // Whether price is active
     active: v.boolean(),
     // Currency (e.g., "usd", "eur")
@@ -95,7 +95,7 @@ export const schema = defineSchema({
     // Custom metadata (Stripe.Metadata is Record<string, string>)
     metadata: v.optional(v.record(v.string(), v.string())),
   })
-    .index("stripeId", ["stripeId"])
+    .index("stripePriceId", ["stripePriceId"])
     .index("productId", ["productId"])
     .index("slug", ["slug"])
     .index("active", ["active"])
@@ -108,11 +108,11 @@ export const schema = defineSchema({
    */
   subscriptions: defineTable({
     // Stripe subscription ID
-    stripeId: v.string(),
+    stripeSubscriptionId: v.string(),
     // Customer ID (references customers table)
     customerId: v.id("customers"),
     // Stripe customer ID for reference
-    customerStripeId: v.string(),
+    stripeCustomerId: v.string(),
     // User ID for quick lookups
     userId: v.string(),
     // Subscription status
@@ -120,7 +120,7 @@ export const schema = defineSchema({
     // Current price ID (references prices table)
     priceId: v.optional(v.id("prices")),
     // Stripe price ID for reference
-    priceStripeId: v.optional(v.string()),
+    stripePriceId: v.optional(v.string()),
     // Product slug if using configured products
     productSlug: v.optional(v.string()),
     // Currency
@@ -144,7 +144,7 @@ export const schema = defineSchema({
     // Custom metadata (Stripe.Metadata is Record<string, string>)
     metadata: v.optional(v.record(v.string(), v.string())),
   })
-    .index("stripeId", ["stripeId"])
+    .index("stripeSubscriptionId", ["stripeSubscriptionId"])
     .index("customerId", ["customerId"])
     .index("userId", ["userId"])
     .index("userId_status", ["userId", "status"])
@@ -156,17 +156,17 @@ export const schema = defineSchema({
    */
   invoices: defineTable({
     // Stripe invoice ID
-    stripeId: v.string(),
+    stripeInvoiceId: v.string(),
     // Customer ID (references customers table)
     customerId: v.id("customers"),
     // Stripe customer ID for reference
-    customerStripeId: v.string(),
+    stripeCustomerId: v.string(),
     // User ID for quick lookups
     userId: v.string(),
     // Subscription ID if invoice is for a subscription
     subscriptionId: v.optional(v.id("subscriptions")),
     // Stripe subscription ID for reference
-    subscriptionStripeId: v.optional(v.string()),
+    stripeSubscriptionId: v.optional(v.string()),
     // Invoice status
     status: v.string(),
     // Currency
@@ -202,7 +202,7 @@ export const schema = defineSchema({
     // Custom metadata (Stripe.Metadata is Record<string, string>)
     metadata: v.optional(v.record(v.string(), v.string())),
   })
-    .index("stripeId", ["stripeId"])
+    .index("stripeInvoiceId", ["stripeInvoiceId"])
     .index("customerId", ["customerId"])
     .index("userId", ["userId"])
     .index("userId_status", ["userId", "status"])

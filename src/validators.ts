@@ -5,20 +5,24 @@ import schema from "./component/schema.js";
 
 const vv = typedV(schema);
 
-// ID validators
-const vStripeCustomerId = vv.id("customers");
-const vStripeProductId = vv.id("products");
-const vStripePriceId = vv.id("prices");
-const vStripeSubscriptionId = vv.id("subscriptions");
+// Convex ID validators (for internal references between tables)
+const vConvexCustomerId = vv.id("customers");
+const vConvexProductId = vv.id("products");
+const vConvexPriceId = vv.id("prices");
+const vConvexSubscriptionId = vv.id("subscriptions");
 
 // Common field validators
 export const vUserId = v.string();
-export const vStripeId = v.string();
+export const vStripeCustomerId = v.string();
+export const vStripeProductId = v.string();
+export const vStripePriceId = v.string();
+export const vStripeSubscriptionId = v.string();
+export const vStripeInvoiceId = v.string();
 export const vMetadata = v.optional(v.record(v.string(), v.string()));
 
 // Mutation argument validators
 export const vUpsertCustomerArgs = v.object({
-  stripeId: v.string(),
+  stripeCustomerId: v.string(),
   userId: v.string(),
   email: v.string(),
   name: v.optional(v.string()),
@@ -28,7 +32,7 @@ export const vUpsertCustomerArgs = v.object({
 });
 
 export const vUpsertProductArgs = v.object({
-  stripeId: v.string(),
+  stripeProductId: v.string(),
   name: v.string(),
   description: v.optional(v.string()),
   active: v.boolean(),
@@ -40,9 +44,9 @@ export const vUpsertProductArgs = v.object({
 });
 
 export const vUpsertPriceArgs = v.object({
-  stripeId: v.string(),
-  productId: vStripeProductId,
-  productStripeId: v.string(),
+  stripePriceId: v.string(),
+  productId: vConvexProductId,
+  stripeProductId: v.string(),
   active: v.boolean(),
   currency: v.string(),
   unitAmount: v.optional(v.number()),
@@ -56,13 +60,13 @@ export const vUpsertPriceArgs = v.object({
 });
 
 export const vUpsertSubscriptionArgs = v.object({
-  stripeId: v.string(),
-  customerId: vStripeCustomerId,
-  customerStripeId: v.string(),
+  stripeSubscriptionId: v.string(),
+  customerId: vConvexCustomerId,
+  stripeCustomerId: v.string(),
   userId: v.string(),
   status: v.string(),
-  priceId: v.optional(vStripePriceId),
-  priceStripeId: v.optional(v.string()),
+  priceId: v.optional(vConvexPriceId),
+  stripePriceId: v.optional(v.string()),
   productSlug: v.optional(v.string()),
   currency: v.string(),
   currentPeriodStart: v.number(),
@@ -77,12 +81,12 @@ export const vUpsertSubscriptionArgs = v.object({
 });
 
 export const vUpsertInvoiceArgs = v.object({
-  stripeId: v.string(),
-  customerId: vStripeCustomerId,
-  customerStripeId: v.string(),
+  stripeInvoiceId: v.string(),
+  customerId: vConvexCustomerId,
+  stripeCustomerId: v.string(),
   userId: v.string(),
-  subscriptionId: v.optional(vStripeSubscriptionId),
-  subscriptionStripeId: v.optional(v.string()),
+  subscriptionId: v.optional(vConvexSubscriptionId),
+  stripeSubscriptionId: v.optional(v.string()),
   status: v.string(),
   currency: v.string(),
   amountDue: v.number(),
@@ -103,11 +107,11 @@ export const vUpsertInvoiceArgs = v.object({
 });
 
 export const vDeleteSubscriptionArgs = v.object({
-  stripeId: v.string(),
+  stripeSubscriptionId: v.string(),
 });
 
 export const vDeleteCustomerArgs = v.object({
-  stripeId: v.string(),
+  stripeCustomerId: v.string(),
 });
 
 // Public API argument validators

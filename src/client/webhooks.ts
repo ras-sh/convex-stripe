@@ -196,7 +196,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const customer = await ctx.runQuery(
       this.component.lib.getCustomerByStripeId,
       {
-        stripeId: customerStripeId,
+        stripeCustomerId: customerStripeId,
       }
     );
 
@@ -206,14 +206,14 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     }
 
     const firstItem = subscription.items.data[0];
-    const priceStripeId = firstItem?.price.id;
+    const stripePriceId = firstItem?.price.id;
     let priceId: Id<"prices"> | undefined;
     let productSlug: string | undefined;
     let currency: string | undefined;
 
-    if (priceStripeId) {
+    if (stripePriceId) {
       const price = await ctx.runQuery(this.component.lib.getPriceByStripeId, {
-        stripeId: priceStripeId,
+        stripePriceId,
       });
       priceId = price?._id as Id<"prices"> | undefined;
       productSlug = price?.slug;
@@ -226,13 +226,13 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     // Price currency already derived above when possible
 
     await ctx.runMutation(this.component.lib.upsertSubscription, {
-      stripeId: subscription.id,
+      stripeSubscriptionId: subscription.id,
       customerId: customer._id,
-      customerStripeId,
+      stripeCustomerId: customerStripeId,
       userId: customer.userId,
       status: subscription.status,
       priceId: priceId ?? undefined,
-      priceStripeId,
+      stripePriceId,
       productSlug,
       // Prefer currency from stored price; fall back to event item's price
       currency: currency ?? firstItem?.price.currency ?? "usd",
@@ -255,7 +255,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
   ) {
     const subscription = event.data.object;
     await ctx.runMutation(this.component.lib.deleteSubscription, {
-      stripeId: subscription.id,
+      stripeSubscriptionId: subscription.id,
     });
   }
 
@@ -275,7 +275,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const customer = await ctx.runQuery(
       this.component.lib.getCustomerByStripeId,
       {
-        stripeId: customerStripeId,
+        stripeCustomerId: customerStripeId,
       }
     );
 
@@ -285,18 +285,18 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     }
 
     const subscriptionId: Id<"subscriptions"> | undefined = undefined;
-    const subscriptionStripeId: string | undefined = undefined;
+    const stripeSubscriptionId: string | undefined = undefined;
 
     // Link to subscription only if available via typed fields (not available in current types)
     // Leave subscriptionId undefined in this handler to respect SDK typings
 
     await ctx.runMutation(this.component.lib.upsertInvoice, {
-      stripeId: invoice.id,
+      stripeInvoiceId: invoice.id,
       customerId: customer._id,
-      customerStripeId,
+      stripeCustomerId: customerStripeId,
       userId: customer.userId,
       subscriptionId: subscriptionId ?? undefined,
-      subscriptionStripeId,
+      stripeSubscriptionId,
       status: invoice.status || "draft",
       currency: invoice.currency,
       amountDue: invoice.amount_due,
@@ -327,7 +327,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     );
 
     await ctx.runMutation(this.component.lib.upsertProduct, {
-      stripeId: product.id,
+      stripeProductId: product.id,
       name: product.name,
       description: product.description || undefined,
       active: product.active,
@@ -345,7 +345,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
   ) {
     const product = event.data.object;
     await ctx.runMutation(this.component.lib.deactivateProduct, {
-      stripeId: product.id,
+      stripeProductId: product.id,
     });
   }
 
@@ -360,7 +360,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const product = await ctx.runQuery(
       this.component.lib.getProductByStripeId,
       {
-        stripeId: productStripeId,
+        stripeProductId: productStripeId,
       }
     );
 
@@ -374,9 +374,9 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       : undefined;
 
     await ctx.runMutation(this.component.lib.upsertPrice, {
-      stripeId: price.id,
+      stripePriceId: price.id,
       productId: product._id,
-      productStripeId,
+      stripeProductId: productStripeId,
       active: price.active,
       currency: price.currency,
       unitAmount: price.unit_amount || undefined,
@@ -396,7 +396,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
   ) {
     const price = event.data.object;
     await ctx.runMutation(this.component.lib.deactivatePrice, {
-      stripeId: price.id,
+      stripePriceId: price.id,
     });
   }
 
@@ -413,7 +413,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       const existing = await ctx.runQuery(
         this.component.lib.getCustomerByStripeId,
         {
-          stripeId: c.id,
+          stripeCustomerId: c.id,
         }
       );
       userId = existing?.userId;
@@ -422,7 +422,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
       return;
     }
     await ctx.runMutation(this.component.lib.upsertCustomer, {
-      stripeId: c.id,
+      stripeCustomerId: c.id,
       userId,
       email: c.email || "",
       name: c.name || undefined,
@@ -438,7 +438,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
   ) {
     const c = event.data.object;
     await ctx.runMutation(this.component.lib.deleteCustomer, {
-      stripeId: c.id,
+      stripeCustomerId: c.id,
     });
   }
 
@@ -457,7 +457,7 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
     const customer = await ctx.runQuery(
       this.component.lib.getCustomerByStripeId,
       {
-        stripeId: customerStripeId,
+        stripeCustomerId: customerStripeId,
       }
     );
     if (!customer) {
@@ -466,12 +466,12 @@ export class WebhookHandler<Products extends Record<string, ProductConfig>> {
 
     await ctx.runMutation(this.component.lib.upsertInvoice, {
       // Use PaymentIntent id to record purchase in invoices store
-      stripeId: pi.id,
+      stripeInvoiceId: pi.id,
       customerId: customer._id,
-      customerStripeId,
+      stripeCustomerId: customerStripeId,
       userId: customer.userId,
       subscriptionId: undefined,
-      subscriptionStripeId: undefined,
+      stripeSubscriptionId: undefined,
       status: pi.status,
       currency: pi.currency,
       amountDue: pi.amount ?? 0,

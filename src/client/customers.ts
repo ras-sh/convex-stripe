@@ -49,7 +49,7 @@ export class CustomerMethods {
 
     // Store in Convex
     await ctx.runMutation(this.component.lib.upsertCustomer, {
-      stripeId: stripeCustomer.id,
+      stripeCustomerId: stripeCustomer.id,
       userId,
       email: stripeCustomer.email || email,
       name: stripeCustomer.name || name,

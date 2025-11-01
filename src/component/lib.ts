@@ -4,7 +4,10 @@ import {
   vDeleteCustomerArgs,
   vDeleteSubscriptionArgs,
   vListUserInvoicesArgs,
-  vStripeId,
+  vStripeCustomerId,
+  vStripePriceId,
+  vStripeProductId,
+  vStripeSubscriptionId,
   vUpsertCustomerArgs,
   vUpsertInvoiceArgs,
   vUpsertPriceArgs,
@@ -33,11 +36,13 @@ export const getCustomerByUserId = query({
  * Get a customer by Stripe ID
  */
 export const getCustomerByStripeId = query({
-  args: { stripeId: vStripeId },
+  args: { stripeCustomerId: vStripeCustomerId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("customers")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeCustomerId", (q) =>
+        q.eq("stripeCustomerId", args.stripeCustomerId)
+      )
       .first(),
 });
 
@@ -69,11 +74,13 @@ export const getProductBySlug = query({
  * Get a product by Stripe ID
  */
 export const getProductByStripeId = query({
-  args: { stripeId: vStripeId },
+  args: { stripeProductId: vStripeProductId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("products")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeProductId", (q) =>
+        q.eq("stripeProductId", args.stripeProductId)
+      )
       .first(),
 });
 
@@ -105,11 +112,13 @@ export const getPriceBySlug = query({
  * Get a price by Stripe ID
  */
 export const getPriceByStripeId = query({
-  args: { stripeId: vStripeId },
+  args: { stripePriceId: vStripePriceId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("prices")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripePriceId", (q) =>
+        q.eq("stripePriceId", args.stripePriceId)
+      )
       .first(),
 });
 
@@ -147,11 +156,13 @@ export const listUserSubscriptions = query({
  * Get a subscription by Stripe ID
  */
 export const getSubscriptionByStripeId = query({
-  args: { stripeId: vStripeId },
+  args: { stripeSubscriptionId: vStripeSubscriptionId },
   handler: async (ctx, args) =>
     await ctx.db
       .query("subscriptions")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeSubscriptionId", (q) =>
+        q.eq("stripeSubscriptionId", args.stripeSubscriptionId)
+      )
       .first(),
 });
 
@@ -187,7 +198,9 @@ export const upsertCustomer = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("customers")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeCustomerId", (q) =>
+        q.eq("stripeCustomerId", args.stripeCustomerId)
+      )
       .first();
 
     if (existing) {
@@ -212,7 +225,9 @@ export const upsertProduct = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("products")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeProductId", (q) =>
+        q.eq("stripeProductId", args.stripeProductId)
+      )
       .first();
 
     if (existing) {
@@ -240,13 +255,15 @@ export const upsertPrice = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("prices")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripePriceId", (q) =>
+        q.eq("stripePriceId", args.stripePriceId)
+      )
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         productId: args.productId,
-        productStripeId: args.productStripeId,
+        stripeProductId: args.stripeProductId,
         active: args.active,
         currency: args.currency,
         unitAmount: args.unitAmount,
@@ -272,14 +289,16 @@ export const upsertSubscription = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("subscriptions")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeSubscriptionId", (q) =>
+        q.eq("stripeSubscriptionId", args.stripeSubscriptionId)
+      )
       .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         status: args.status,
         priceId: args.priceId,
-        priceStripeId: args.priceStripeId,
+        stripePriceId: args.stripePriceId,
         productSlug: args.productSlug,
         currency: args.currency,
         currentPeriodStart: args.currentPeriodStart,
@@ -306,7 +325,9 @@ export const deleteSubscription = mutation({
   handler: async (ctx, args) => {
     const subscription = await ctx.db
       .query("subscriptions")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeSubscriptionId", (q) =>
+        q.eq("stripeSubscriptionId", args.stripeSubscriptionId)
+      )
       .first();
 
     if (subscription) {
@@ -323,7 +344,9 @@ export const upsertInvoice = mutation({
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("invoices")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeInvoiceId", (q) =>
+        q.eq("stripeInvoiceId", args.stripeInvoiceId)
+      )
       .first();
 
     if (existing) {
@@ -351,7 +374,9 @@ export const deleteCustomer = mutation({
   handler: async (ctx, args) => {
     const customer = await ctx.db
       .query("customers")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeCustomerId", (q) =>
+        q.eq("stripeCustomerId", args.stripeCustomerId)
+      )
       .first();
     if (customer) {
       await ctx.db.delete(customer._id);
@@ -363,11 +388,13 @@ export const deleteCustomer = mutation({
  * Deactivate a product (set active=false) by Stripe ID
  */
 export const deactivateProduct = mutation({
-  args: v.object({ stripeId: vStripeId }),
+  args: v.object({ stripeProductId: vStripeProductId }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("products")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripeProductId", (q) =>
+        q.eq("stripeProductId", args.stripeProductId)
+      )
       .first();
     if (existing) {
       await ctx.db.patch(existing._id, { active: false });
@@ -379,11 +406,13 @@ export const deactivateProduct = mutation({
  * Deactivate a price (set active=false) by Stripe ID
  */
 export const deactivatePrice = mutation({
-  args: v.object({ stripeId: vStripeId }),
+  args: v.object({ stripePriceId: vStripePriceId }),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("prices")
-      .withIndex("stripeId", (q) => q.eq("stripeId", args.stripeId))
+      .withIndex("stripePriceId", (q) =>
+        q.eq("stripePriceId", args.stripePriceId)
+      )
       .first();
     if (existing) {
       await ctx.db.patch(existing._id, { active: false });
@@ -414,7 +443,7 @@ export const syncProducts = action({
     for (const product of products.data) {
       // Upsert product
       const productId = await ctx.runMutation(api.lib.upsertProduct, {
-        stripeId: product.id,
+        stripeProductId: product.id,
         name: product.name,
         description: product.description || undefined,
         active: product.active,
@@ -437,9 +466,9 @@ export const syncProducts = action({
 
       for (const price of prices.data) {
         await ctx.runMutation(api.lib.upsertPrice, {
-          stripeId: price.id,
+          stripePriceId: price.id,
           productId,
-          productStripeId: product.id,
+          stripeProductId: product.id,
           active: price.active,
           currency: price.currency,
           unitAmount: price.unit_amount || undefined,
@@ -489,7 +518,7 @@ export const syncCustomers = action({
         }
 
         await ctx.runMutation(api.lib.upsertCustomer, {
-          stripeId: customer.id,
+          stripeCustomerId: customer.id,
           userId,
           email: customer.email || "",
           name: customer.name || undefined,
@@ -531,7 +560,7 @@ export const syncSubscriptions = action({
 
       for (const subscription of subscriptions.data) {
         const customer = await ctx.runQuery(api.lib.getCustomerByStripeId, {
-          stripeId: subscription.customer as string,
+          stripeCustomerId: subscription.customer as string,
         });
 
         if (!customer) {
@@ -544,7 +573,7 @@ export const syncSubscriptions = action({
         }
 
         const priceDoc = await ctx.runQuery(api.lib.getPriceByStripeId, {
-          stripeId: price.id,
+          stripePriceId: price.id,
         });
 
         const productSlug = priceDoc?.slug?.split("-")[0] ?? undefined;
@@ -553,13 +582,13 @@ export const syncSubscriptions = action({
         const currentPeriodEnd = firstItem?.current_period_end ?? 0;
 
         await ctx.runMutation(api.lib.upsertSubscription, {
-          stripeId: subscription.id,
+          stripeSubscriptionId: subscription.id,
           customerId: customer._id,
-          customerStripeId: subscription.customer as string,
+          stripeCustomerId: subscription.customer as string,
           userId: customer.userId,
           status: subscription.status,
           priceId: priceDoc?._id,
-          priceStripeId: price.id,
+          stripePriceId: price.id,
           productSlug,
           currency: subscription.currency,
           currentPeriodStart,
@@ -606,7 +635,7 @@ export const syncInvoices = action({
 
       for (const invoice of invoices.data) {
         const customer = await ctx.runQuery(api.lib.getCustomerByStripeId, {
-          stripeId: invoice.customer as string,
+          stripeCustomerId: invoice.customer as string,
         });
 
         if (!customer) {
@@ -614,15 +643,15 @@ export const syncInvoices = action({
         }
 
         const subscriptionId: string | undefined = undefined;
-        const subscriptionStripeId: string | undefined = undefined;
+        const stripeSubscriptionId: string | undefined = undefined;
 
         await ctx.runMutation(api.lib.upsertInvoice, {
-          stripeId: invoice.id,
+          stripeInvoiceId: invoice.id,
           customerId: customer._id,
-          customerStripeId: invoice.customer as string,
+          stripeCustomerId: invoice.customer as string,
           userId: customer.userId,
           subscriptionId,
-          subscriptionStripeId,
+          stripeSubscriptionId,
           status: invoice.status || "draft",
           currency: invoice.currency,
           amountDue: invoice.amount_due,

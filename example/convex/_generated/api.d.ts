@@ -50,25 +50,25 @@ export declare const components: {
       deactivatePrice: FunctionReference<
         "mutation",
         "internal",
-        { stripeId: string },
+        { stripePriceId: string },
         any
       >;
       deactivateProduct: FunctionReference<
         "mutation",
         "internal",
-        { stripeId: string },
+        { stripeProductId: string },
         any
       >;
       deleteCustomer: FunctionReference<
         "mutation",
         "internal",
-        { stripeId: string },
+        { stripeCustomerId: string },
         any
       >;
       deleteSubscription: FunctionReference<
         "mutation",
         "internal",
-        { stripeId: string },
+        { stripeSubscriptionId: string },
         any
       >;
       getCurrentSubscription: FunctionReference<
@@ -80,7 +80,7 @@ export declare const components: {
       getCustomerByStripeId: FunctionReference<
         "query",
         "internal",
-        { stripeId: string },
+        { stripeCustomerId: string },
         any
       >;
       getCustomerByUserId: FunctionReference<
@@ -98,7 +98,7 @@ export declare const components: {
       getPriceByStripeId: FunctionReference<
         "query",
         "internal",
-        { stripeId: string },
+        { stripePriceId: string },
         any
       >;
       getPricesForProduct: FunctionReference<
@@ -116,13 +116,13 @@ export declare const components: {
       getProductByStripeId: FunctionReference<
         "query",
         "internal",
-        { stripeId: string },
+        { stripeProductId: string },
         any
       >;
       getSubscriptionByStripeId: FunctionReference<
         "query",
         "internal",
-        { stripeId: string },
+        { stripeSubscriptionId: string },
         any
       >;
       listActiveProducts: FunctionReference<"query", "internal", {}, any>;
@@ -177,7 +177,7 @@ export declare const components: {
           email: string;
           metadata?: Record<string, string>;
           name?: string;
-          stripeId: string;
+          stripeCustomerId: string;
           userId: string;
         },
         any
@@ -193,7 +193,6 @@ export declare const components: {
           created: number;
           currency: string;
           customerId: string;
-          customerStripeId: string;
           dueDate?: number;
           hostedInvoiceUrl?: string;
           invoicePdf?: string;
@@ -202,9 +201,10 @@ export declare const components: {
           periodEnd: number;
           periodStart: number;
           status: string;
-          stripeId: string;
+          stripeCustomerId: string;
+          stripeInvoiceId: string;
+          stripeSubscriptionId?: string;
           subscriptionId?: string;
-          subscriptionStripeId?: string;
           subtotal: number;
           tax?: number;
           total: number;
@@ -222,11 +222,11 @@ export declare const components: {
           currency: string;
           metadata?: Record<string, string>;
           productId: string;
-          productStripeId: string;
           recurringInterval?: string;
           recurringIntervalCount?: number;
           slug?: string;
-          stripeId: string;
+          stripePriceId: string;
+          stripeProductId: string;
           type: string;
           unitAmount?: number;
         },
@@ -242,7 +242,7 @@ export declare const components: {
           metadata?: Record<string, string>;
           name: string;
           slug?: string;
-          stripeId: string;
+          stripeProductId: string;
           type?: string;
           updated: number;
         },
@@ -259,14 +259,14 @@ export declare const components: {
           currentPeriodEnd: number;
           currentPeriodStart: number;
           customerId: string;
-          customerStripeId: string;
           endedAt?: number;
           metadata?: Record<string, string>;
           priceId?: string;
-          priceStripeId?: string;
           productSlug?: string;
           status: string;
-          stripeId: string;
+          stripeCustomerId: string;
+          stripePriceId?: string;
+          stripeSubscriptionId: string;
           trialEnd?: number;
           trialStart?: number;
           userId: string;
