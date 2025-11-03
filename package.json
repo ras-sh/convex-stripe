@@ -94,7 +94,7 @@
     "react": "^19.2.0",
     "stripe": "^19.2.0",
     "typescript": "^5.9.3",
-    "ultracite": "6.0.5",
+    "ultracite": "6.2.0",
     "vitest": "^4.0.5"
   },
   "peerDependencies": {
